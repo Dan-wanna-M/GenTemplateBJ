@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ClosedXML.Excel;
 using Microsoft.Win32;
 using System.Windows;
+using System.IO;
 
 namespace GenTemplateBJ
 {
@@ -21,8 +22,15 @@ namespace GenTemplateBJ
             };
             if (fd.ShowDialog() is not null and true)
             {
-                XLWorkbook? workbook = new(fd.OpenFile());
-                return workbook;
+                try
+                {
+                    XLWorkbook? workbook = new(fd.OpenFile());
+                    return workbook;
+                }
+                catch(IOException e)
+                {
+                    MessageBox.Show(e.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
             }
             return null;
         }
