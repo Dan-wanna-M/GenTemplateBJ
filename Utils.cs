@@ -8,6 +8,7 @@ using Microsoft.Win32;
 using System.Windows;
 using System.IO;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace GenTemplateBJ
 {
@@ -48,6 +49,11 @@ namespace GenTemplateBJ
                 return dialog.FileName;
             }
             return null;
+        }
+
+        public static IEnumerable<IXLCell> GetCellsUntilLastCellUsed<T>(T data) where T: IXLRangeBase
+        {
+            return data.Cells($"1:{data.LastCellUsed().Address.RowNumber}");
         }
     }
 }

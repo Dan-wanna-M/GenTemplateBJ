@@ -20,7 +20,7 @@ namespace GenTemplateBJ
         {
             var worksheet = workbook.Worksheet(1);
             var oneToOneKeys = worksheet.Column(1).CellsUsed().ToList();
-            var oneToOneValues = worksheet.Column(2).CellsUsed().ToList();
+            var oneToOneValues = Utils.GetCellsUntilLastCellUsed(worksheet.Column(2)).ToList();
             for (int i = 0; i < oneToOneKeys.Count; i++)
             {
                 if (i < oneToOneValues.Count)
@@ -28,7 +28,7 @@ namespace GenTemplateBJ
                 else
                     OneToOneData.Add(oneToOneKeys[i].Value.ToString().Trim(), "");
             }
-            var oneToManyData = worksheet.Columns().Where(x => x.ColumnNumber() is not (1 or 2)).Select(x=>x.CellsUsed().ToList());
+            var oneToManyData = worksheet.Columns().Where(x => x.ColumnNumber() is not (1 or 2)).Select(x=>Utils.GetCellsUntilLastCellUsed(x).ToList());
             foreach(var cells in oneToManyData)
             {
                 var values = new XLCellValue[oneToManyData.First(x => x[0].Value.ToString().Trim() == "材料编码/设备位号").Count - 1];
