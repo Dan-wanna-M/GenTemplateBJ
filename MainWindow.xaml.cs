@@ -12,7 +12,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.IO;
 
 namespace GenTemplateBJ
 {
@@ -40,7 +40,14 @@ namespace GenTemplateBJ
 
         private void Output_Click(object sender, RoutedEventArgs e)
         {
-            // MessageBox.Show("output");
+            var path = Utils.OpenAFolder();
+            if (path is not null)
+            {
+                foreach((var key, var value) in converter.OutputExcels) 
+                {
+                    value.SaveAs(Path.Combine(path, key));
+                }
+            }
         }
 
         private void Convert_Click(object sender, RoutedEventArgs e)

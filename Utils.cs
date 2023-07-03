@@ -7,6 +7,7 @@ using ClosedXML.Excel;
 using Microsoft.Win32;
 using System.Windows;
 using System.IO;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace GenTemplateBJ
 {
@@ -31,6 +32,20 @@ namespace GenTemplateBJ
                 {
                     MessageBox.Show(e.Message, "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
+            }
+            return null;
+        }
+
+        public static string? OpenAFolder()
+        {
+            CommonOpenFileDialog dialog = new()
+            {
+                InitialDirectory = Environment.CurrentDirectory,
+                IsFolderPicker = true
+            };
+            if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                return dialog.FileName;
             }
             return null;
         }

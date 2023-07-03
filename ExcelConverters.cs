@@ -13,16 +13,15 @@ namespace GenTemplateBJ
     internal class ExcelConverters: INotifyPropertyChanged
     {
         public List<string> TemplateTypes { get; } = new() {"请选择", "川西" };
-        public Dictionary<string, Action> TemplateTypeToExcelConverter { get; } = new()
-        {
-
-        };
+        public Dictionary<string, Action> TemplateTypeToExcelConverter { get; } = new();
 
         public ExcelConverters()
         {
             TemplateTypeToExcelConverter["川西"] = () =>
             {
-                FillTransportList("川西");
+                OutputExcels = new();
+                var result = FillTransportList("川西");
+                OutputExcels.Add("发货清单.xlsx", result);
             };
         }
 
@@ -59,7 +58,6 @@ namespace GenTemplateBJ
                 // worksheet.Cell(i, "I").Value = excelData.OneToManyData["备注（跟踪号）"][j];
             }
             worksheet.Cell(end, "F").Value = excelData.OneToManyData["数量（Quantity）"].Select(x => int.Parse(x)).Sum();
-            transportList.SaveAs(Path.Combine(folderPath, "Templates", templateType, "发货清单结果.xlsx"));
             return transportList;
         }
 
