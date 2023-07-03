@@ -44,8 +44,8 @@ namespace GenTemplateBJ
             worksheet.Cell(5, "F").Value = excelData.OneToOneData["收货人 电话"];
             worksheet.Cell(6, "F").Value = excelData.OneToOneData["承运商"];
             worksheet.Cell(7, "F").Value = excelData.OneToOneData["运输方式"];
-            worksheet.Row(9).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Count);
-            var end = 10 + excelData.OneToManyData["材料编码/设备位号"].Count;
+            worksheet.Row(9).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
+            var end = 10 + excelData.OneToManyData["材料编码/设备位号"].Length;
             for (int i = 10; i < end; i++)
             {
                 worksheet.Cell(i, "A").Value = i - 9;
@@ -54,10 +54,10 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "C").Value = excelData.OneToManyData["产品规格(Size)"][j];
                 worksheet.Cell(i, "F").Value = excelData.OneToManyData["单位（Unit）"][j];
                 worksheet.Cell(i, "G").Value = excelData.OneToManyData["数量（Quantity）"][j];
-                // worksheet.Cell(i, "H").Value = excelData.OneToManyData["箱号"][j];
-                // worksheet.Cell(i, "I").Value = excelData.OneToManyData["备注（跟踪号）"][j];
+                worksheet.Cell(i, "H").Value = excelData.OneToManyData["箱号"][j];
+                worksheet.Cell(i, "I").Value = excelData.OneToManyData["备注（跟踪号）"][j];
             }
-            worksheet.Cell(end, "F").Value = excelData.OneToManyData["数量（Quantity）"].Select(x => int.Parse(x)).Sum();
+            worksheet.Cell(end, "G").Value = excelData.OneToManyData["数量（Quantity）"].Select(x => (int)x.GetUnifiedNumber()).Sum();
             return transportList;
         }
 
