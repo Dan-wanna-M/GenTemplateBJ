@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using ClosedXML.Excel;
+using ClosedXML.Utils;
 
 namespace GenTemplateBJ
 {
@@ -19,20 +20,18 @@ namespace GenTemplateBJ
         {
             TemplateTypeToExcelConverter["川西"] = () =>
             {
-                OutputExcels = new();
-                var result1 = FillTransportList("川西");
-                OutputExcels.Add("发货清单.xlsx", result1);
-                var result2 = FillQualityList("川西");
-                OutputExcels.Add("质检报告.xlsx", result2);
-
+                OutputExcels = new()
+                {
+                    { "发货清单.xlsx", FillTransportList("川西") },
+                    { "质检报告.xlsx", FillQualityList("川西") },
+                    {"产品合格证.xlsx",FillProductionCertificate("川西") }
+                };
             };
         }
 
         private XLWorkbook FillTransportList(string templateType)
         {
-            var folderPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
-            // Console.WriteLine("Folder Path: " + folderPath);
-            var transportList = new XLWorkbook(Path.Combine(folderPath, "Templates", templateType, "发货清单.xlsx"));
+            var transportList=Utils.GetTemplateExcel(templateType, "发货清单.xlsx");
             var worksheet = transportList.Worksheet(1);
             worksheet.Cell(1, "C").Value = excelData.OneToOneData["项目名称"];
             //worksheet.Cell(2, "C").Value = $"材料单({excelData.OneToOneData["工程类别"]})";
@@ -47,12 +46,12 @@ namespace GenTemplateBJ
             worksheet.Cell(5, "F").Value = excelData.OneToOneData["收货人 电话"];
             worksheet.Cell(6, "F").Value = excelData.OneToOneData["承运商"];
             worksheet.Cell(7, "F").Value = excelData.OneToOneData["运输方式"];
-            worksheet.Row(9).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
+            worksheet.Row(10).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
             var end = 10 + excelData.OneToManyData["材料编码/设备位号"].Length;
-            for (int i = 10; i < end; i++)
+            for (int i = 11; i < end; i++)
             {
-                worksheet.Cell(i, "A").Value = i - 9;
-                int j = i - 10;
+                worksheet.Cell(i, "A").Value = i - 10;
+                int j = i - 11;
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
                 worksheet.Cell(i, "C").Value = excelData.OneToManyData["产品规格(Size)"][j];
                 worksheet.Cell(i, "F").Value = excelData.OneToManyData["单位（Unit）"][j];
@@ -66,11 +65,9 @@ namespace GenTemplateBJ
 
         private XLWorkbook FillQualityList(string templateType)
         {
-            var folderPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
-            // Console.WriteLine("Folder Path: " + folderPath);
-            var qualityList = new XLWorkbook(Path.Combine(folderPath, "Templates", templateType, "质检文件.xlsx"));
+            var qualityList = Utils.GetTemplateExcel(templateType, "质检文件.xlsx");
             var worksheet = qualityList.Worksheet(1);
-            worksheet.Cell(3, "A").Value = string.Format("报告编号: TJMZLBG-yyyymm-{0}", excelData.OneToOneData["质检报告编号"]);
+            worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
             worksheet.Cell(4, "B").Value = excelData.OneToOneData["公司名称"];
             worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"];
             worksheet.Cell(6, "B").Value = excelData.OneToOneData["依据标准"];
@@ -97,12 +94,70 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "C").Value = excelData.OneToManyData["标准值"][j];
             }
 
-                return qualityList;
-
+            return qualityList;
         }
-
-
-
+        enum CertificateRowStatus
+        {
+            Empty,
+            LeftFull,
+            Full,
+        }
+        private XLWorkbook FillProductionCertificate(string templateType)
+        {
+            var productionCertificate = Utils.GetTemplateExcel(templateType, "3产品合格证模版.xlsx");
+            var worksheet = productionCertificate.Worksheet(1);
+            worksheet.Column(worksheet.ColumnLetterToNumber("Z")+ worksheet.ColumnLetterToNumber("K") - worksheet.ColumnLetterToNumber("E")).Width = worksheet.Column("K").Width;
+            worksheet.Column(worksheet.ColumnLetterToNumber("Z") + worksheet.ColumnLetterToNumber("W") - worksheet.ColumnLetterToNumber("E")).Width = worksheet.Column("W").Width;
+            int certificateWidth = worksheet.ColumnLetterToNumber("W") - worksheet.ColumnLetterToNumber("E");
+            int certicateHeight = 28 - 3;
+            int marginW = 2;
+            int marginH = 2;
+            var layoutState = CertificateRowStatus.Empty;
+            int currentLeft = worksheet.ColumnLetterToNumber("E");
+            int currentTop = 3;
+            var logo = worksheet.Pictures.Single();
+            void AddOneCertificate(XLCellValue productSize, XLCellValue materialCode, XLCellValue quantity)
+            {
+                int horizontalShift = certificateWidth + marginW + 1;
+                int verticalShift = certicateHeight + marginH + 1;
+                switch (layoutState)
+                {
+                    case CertificateRowStatus.Empty:
+                        layoutState = CertificateRowStatus.LeftFull;
+                        break;
+                    case CertificateRowStatus.LeftFull:
+                        worksheet.Range(
+                            $"{worksheet.ColumnNumberToLetter(currentLeft)}{currentTop}" +
+                            $":{worksheet.ColumnNumberToLetter(currentLeft + certificateWidth)}{currentTop + certicateHeight}")
+                            .CopyTo(worksheet.Cell(currentTop, currentLeft + horizontalShift));
+                        currentLeft += horizontalShift;
+                        layoutState = CertificateRowStatus.Full;
+                        break;
+                    case CertificateRowStatus.Full:
+                        worksheet.Range(
+                             $"{worksheet.ColumnNumberToLetter(currentLeft)}{currentTop}" +
+                             $":{worksheet.ColumnNumberToLetter(currentLeft + certificateWidth)}{currentTop + certicateHeight}")
+                             .CopyTo(worksheet.Cell(currentTop+verticalShift, currentLeft - horizontalShift));
+                        currentTop += verticalShift;
+                        currentLeft -= horizontalShift;
+                        layoutState = CertificateRowStatus.LeftFull;
+                        break;
+                }
+                int firstCellVerticalOffset = 10 - 3;
+                int firstCellHorizontalOffset = worksheet.ColumnLetterToNumber("L") - worksheet.ColumnLetterToNumber("E");
+                logo.Duplicate().MoveTo(worksheet.Cell(currentTop + 1, currentLeft + worksheet.ColumnLetterToNumber("P") - worksheet.ColumnLetterToNumber("E")));
+                worksheet.Cell(currentTop + firstCellVerticalOffset, currentLeft+firstCellHorizontalOffset).Value = excelData.OneToOneData["材料名称"];
+                worksheet.Cell(currentTop + firstCellVerticalOffset+2, currentLeft + firstCellHorizontalOffset).Value = productSize;
+                worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
+                worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3+3, currentLeft + firstCellHorizontalOffset).Value = quantity;
+                worksheet.Cell(currentTop + firstCellVerticalOffset + 2 + 3 + 3+2, currentLeft + firstCellHorizontalOffset).Value = excelData.OneToOneData["出厂日期"];
+            }
+            for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
+            {
+                AddOneCertificate(excelData.OneToManyData["产品规格(Size)"][i], excelData.OneToManyData["材料编码/设备位号"][i], excelData.OneToManyData["数量（Quantity）"][i]);
+            }
+            return productionCertificate;
+        }
 
 
         private InputExcelData? excelData;

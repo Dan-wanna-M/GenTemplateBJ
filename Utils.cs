@@ -55,5 +55,21 @@ namespace GenTemplateBJ
         {
             return data.Cells($"1:{data.LastCellUsed().Address.RowNumber}");
         }
+
+        public static XLWorkbook GetTemplateExcel(string templateType, string name)
+        {
+            var folderPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
+            return new XLWorkbook(Path.Combine(folderPath, "Templates", templateType, name));
+        }
+
+        public static int ColumnLetterToNumber(this IXLWorksheet sheet, string letter)
+        {
+            return sheet.Column(letter).ColumnNumber();
+        }
+
+        public static string ColumnNumberToLetter(this IXLWorksheet sheet, int number)
+        {
+            return sheet.Column(number).ColumnLetter();
+        }
     }
 }
