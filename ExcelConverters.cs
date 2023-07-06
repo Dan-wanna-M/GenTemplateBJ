@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using ClosedXML.Excel;
 using ClosedXML.Utils;
+using DocumentFormat.OpenXml.Drawing.Charts;
 using Microsoft.WindowsAPICodePack.Shell.Interop;
 
 namespace GenTemplateBJ
@@ -27,7 +28,8 @@ namespace GenTemplateBJ
                     { "发货清单.xlsx", FillTransportList("川西") },
                     { "质检报告.xlsx", FillQualityList("川西") },
                     { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
-                    {"产品合格证.xlsx",FillProductionCertificate("川西") }
+                    {"产品合格证.xlsx",FillProductionCertificate("川西") },
+                    {"放行报告.xlsx", FillReleaseReport("川西") }
                 };
             };
         }
@@ -243,22 +245,57 @@ namespace GenTemplateBJ
             }
             return productionCertificate;
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        private XLWorkbook FillReleaseReport(string templateType)
+        {
+            var releaseReport = Utils.GetTemplateExcel(templateType, "放行报告模版.xlsx");
+            var worksheet = releaseReport.Worksheet(1);
+            var tickbox = worksheet.Picture("图片 7");
+            int horizontalTickBoxOffset = tickbox.GetOffset(ClosedXML.Excel.Drawings.XLMarkerPosition.TopLeft).X;
+            tickbox = tickbox.Duplicate();
+            foreach (var i in worksheet.Pictures.ToList())
+            {
+                if (i == tickbox||i.Name=="图片 0")
+                    continue;
+                i.Delete();
+            }
+            worksheet.Cell(3, 'C').Value = excelData.OneToOneData["项目名称"];
+            worksheet.Cell(5, 'C').Value = excelData.OneToOneData["业主"];
+            worksheet.Cell(7, 'C').Value = excelData.OneToOneData["材料名称"];
+            worksheet.Cell(9, 'C').Value = excelData.OneToOneData["公司名称"];
+            worksheet.Cell(11, 'C').Value = excelData.OneToOneData["供方地点"];
+            worksheet.Cell(3, 'G').Value = excelData.OneToOneData["使用部分"];
+            worksheet.Cell(5, 'G').Value = excelData.OneToOneData["请购单号"];
+            worksheet.Cell(7, 'G').Value = excelData.OneToOneData["合同号"];
+            worksheet.Cell(9, 'G').Value = excelData.OneToOneData["使用部分"];
+            worksheet.Cell(10, 'G').Value = excelData.OneToOneData["放行联系人"];
+            worksheet.Cell(11, 'G').Value = excelData.OneToOneData["放行联系人电话"];
+            var height = worksheet.Row(16).Height;
+            var heights = worksheet.Rows(17, 33).Select(x => x.Height);
+            worksheet.Row(16).Delete();
+            worksheet.Row(15).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
+            var end = 15 + excelData.OneToManyData["材料编码/设备位号"].Length+1;
+            for (int i = 16; i < end; i++)
+            {
+                worksheet.Row(i).Height = height;
+                worksheet.Range($"C{i}:D{i}").Merge();
+                int j = i - 16;
+                worksheet.Cell(i, "A").Value = i - 14;
+                worksheet.Cell(i, "B").Value = excelData.OneToOneData["材料名称"];
+                worksheet.Cell(i, "C").Value = excelData.OneToManyData["材料编码/设备位号"][j];
+                worksheet.Cell(i, "E").Value = excelData.OneToManyData["材质"][j];
+                worksheet.Cell(i, "F").Value = excelData.OneToManyData["数量（Quantity）"][j];
+                worksheet.Cell(i, "G").Value = excelData.OneToManyData["重量"][j];
+                worksheet.Cell(i, "H").Value = excelData.OneToManyData["备注-或物明细"][j];
+            }
+            var temp = new int[]{21,22,25,26,27 };
+            foreach(var i in temp)
+            {
+                tickbox = tickbox.MoveTo(worksheet.Cell(i - 17 + end, "A"), horizontalTickBoxOffset, 0);
+                tickbox = tickbox.Duplicate();
+            }
+            tickbox.Delete();
+            return releaseReport;
+        }
 
         private InputExcelData? excelData;
         public InputExcelData? ExcelData { get=>excelData; set
