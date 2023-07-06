@@ -6,8 +6,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using ClosedXML.Excel;
 using ClosedXML.Utils;
+using Microsoft.WindowsAPICodePack.Shell.Interop;
 
 namespace GenTemplateBJ
 {
@@ -71,7 +73,7 @@ namespace GenTemplateBJ
         private XLWorkbook FillQualityList(string templateType)
         {
             var qualityList = Utils.GetTemplateExcel(templateType, "质检文件.xlsx");
-            var worksheet = qualityList.Worksheet(1);
+            var worksheet = qualityList.Worksheet("检验报告-02804-01-4000-MP-R-M-8050");
             worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
             worksheet.Cell(4, "B").Value = excelData.OneToOneData["公司名称"];
             worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"];
@@ -98,7 +100,6 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["试验项目"][j];
                 worksheet.Cell(i, "C").Value = excelData.OneToManyData["标准值"][j];
             }
-
             return qualityList;
         }
         enum CertificateRowStatus
