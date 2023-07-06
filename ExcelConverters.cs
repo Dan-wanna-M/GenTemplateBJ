@@ -31,7 +31,7 @@ namespace GenTemplateBJ
 
         private XLWorkbook FillTransportList(string templateType)
         {
-            var transportList=Utils.GetTemplateExcel(templateType, "发货清单.xlsx");
+            var transportList=Utils.GetTemplateExcel(templateType, "2送货单模版.xlsx");
             var worksheet = transportList.Worksheet(1);
             worksheet.Cell(1, "C").Value = excelData.OneToOneData["项目名称"];
             //worksheet.Cell(2, "C").Value = $"材料单({excelData.OneToOneData["工程类别"]})";
@@ -46,12 +46,17 @@ namespace GenTemplateBJ
             worksheet.Cell(5, "F").Value = excelData.OneToOneData["收货人 电话"];
             worksheet.Cell(6, "F").Value = excelData.OneToOneData["承运商"];
             worksheet.Cell(7, "F").Value = excelData.OneToOneData["运输方式"];
-            worksheet.Row(10).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
-            var end = 10 + excelData.OneToManyData["材料编码/设备位号"].Length;
-            for (int i = 11; i < end; i++)
+            var height = worksheet.Row(10).Height;
+            foreach (var i in worksheet.Rows(10, 11))
+                i.Delete();
+            worksheet.Row(9).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
+
+            var end = 9 + excelData.OneToManyData["材料编码/设备位号"].Length+1;
+            for (int i = 10; i < end; i++)
             {
-                worksheet.Cell(i, "A").Value = i - 10;
-                int j = i - 11;
+                worksheet.Row(i).Height = height;
+                worksheet.Cell(i, "A").Value = i - 9;
+                int j = i - 10;
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
                 worksheet.Cell(i, "C").Value = excelData.OneToManyData["产品规格(Size)"][j];
                 worksheet.Cell(i, "F").Value = excelData.OneToManyData["单位（Unit）"][j];
@@ -106,20 +111,34 @@ namespace GenTemplateBJ
         {
             var productionCertificate = Utils.GetTemplateExcel(templateType, "3产品合格证模版.xlsx");
             var worksheet = productionCertificate.Worksheet(1);
-            worksheet.Column(worksheet.ColumnLetterToNumber("Z")+ worksheet.ColumnLetterToNumber("K") - worksheet.ColumnLetterToNumber("E")).Width = worksheet.Column("K").Width;
-            worksheet.Column(worksheet.ColumnLetterToNumber("Z") + worksheet.ColumnLetterToNumber("W") - worksheet.ColumnLetterToNumber("E")).Width = worksheet.Column("W").Width;
-            int certificateWidth = worksheet.ColumnLetterToNumber("W") - worksheet.ColumnLetterToNumber("E");
-            int certicateHeight = 28 - 3;
+            int certificateWidth = worksheet.ColumnLetterToNumber("W") - worksheet.ColumnLetterToNumber("E")+1;
+            int certicateHeight = 28 - 3+1;
             int marginW = 2;
             int marginH = 2;
             var layoutState = CertificateRowStatus.Empty;
             int currentLeft = worksheet.ColumnLetterToNumber("E");
             int currentTop = 3;
+            int initialTop = currentTop;
             var logo = worksheet.Pictures.Single();
+            void AdjustWidth(int initialLeft, int current, int size)
+            {
+                for (int i = current; i < current+size; i++)
+                {
+                    worksheet.Column(i).Width = worksheet.Column(initialLeft + i - current).Width;
+                }
+            }
+            void AdjustHeight(int initialTop, int current, int size)
+            {
+                for (int i = current; i < current + size; i++)
+                {
+                    worksheet.Row(i).Height = worksheet.Row(initialTop + i - current).Height;
+                }
+            }
+            AdjustWidth(currentLeft, worksheet.ColumnLetterToNumber("Z"), certificateWidth);
             void AddOneCertificate(XLCellValue productSize, XLCellValue materialCode, XLCellValue quantity)
             {
-                int horizontalShift = certificateWidth + marginW + 1;
-                int verticalShift = certicateHeight + marginH + 1;
+                int horizontalShift = certificateWidth + marginW;
+                int verticalShift = certicateHeight + marginH;
                 switch (layoutState)
                 {
                     case CertificateRowStatus.Empty:
@@ -143,6 +162,7 @@ namespace GenTemplateBJ
                         layoutState = CertificateRowStatus.LeftFull;
                         break;
                 }
+                AdjustHeight(currentTop, initialTop, certicateHeight);
                 int firstCellVerticalOffset = 10 - 3;
                 int firstCellHorizontalOffset = worksheet.ColumnLetterToNumber("L") - worksheet.ColumnLetterToNumber("E");
                 logo.Duplicate().MoveTo(worksheet.Cell(currentTop + 1, currentLeft + worksheet.ColumnLetterToNumber("P") - worksheet.ColumnLetterToNumber("E")));
