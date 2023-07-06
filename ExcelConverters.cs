@@ -8,9 +8,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using ClosedXML.Excel;
-using ClosedXML.Utils;
+using NPOI.XWPF.UserModel;
 using DocumentFormat.OpenXml.Drawing.Charts;
 using Microsoft.WindowsAPICodePack.Shell.Interop;
+using DocumentFormat.OpenXml.Wordprocessing;
 
 namespace GenTemplateBJ
 {
