@@ -26,6 +26,7 @@ namespace GenTemplateBJ
                 {
                     { "发货清单.xlsx", FillTransportList("川西") },
                     { "质检报告.xlsx", FillQualityList("川西") },
+                    { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
                     {"产品合格证.xlsx",FillProductionCertificate("川西") }
                 };
             };
@@ -107,6 +108,64 @@ namespace GenTemplateBJ
 
             return qualityList;
         }
+
+
+        private XLWorkbook FillSelfCheckTable(string templateType)
+        {
+            var selfCheckTable = Utils.GetTemplateExcel(templateType, "各厂家自查表模版.xlsx");
+            var worksheet = selfCheckTable.Worksheet(1);
+            string usedMaterial = "";
+            int materialLength = 0;
+            for (int i = 0; i < excelData.OneToManyData["所用材料"].Length; i++)
+            {
+                if (excelData.OneToManyData["所用材料"][i].ToString() != "")
+                {
+                    materialLength += 1;
+                }
+            }
+            for (int i = 0; i < materialLength; i++)
+            {
+                usedMaterial += excelData.OneToManyData["所用材料"][i];
+                if (i != materialLength - 1)
+                {
+                    usedMaterial += "、";
+                }
+                
+            }
+
+                for (int i = 4; i < excelData.OneToManyData["材料编码/设备位号"].Length + 4; i++)
+            {
+                int j = i - 4;
+                worksheet.Cell(i, "B").Value = excelData.OneToOneData["站号"]+ "站";
+                worksheet.Cell(i, "C").Value = "MP";
+                worksheet.Cell(i, "D").Value = excelData.OneToOneData["发货日期"];
+                worksheet.Cell(i, "E").Value = excelData.OneToOneData["公司名称"];
+                worksheet.Cell(i, "F").Value = excelData.OneToOneData["合同号"];
+                worksheet.Cell(i, "G").Value = excelData.OneToOneData["请购单号"];
+                worksheet.Cell(i, "H").Value = excelData.OneToManyData["材料编码/设备位号"][j];
+                worksheet.Cell(i, "I").Value = excelData.OneToOneData["材料名称"];
+                worksheet.Cell(i, "J").Value = excelData.OneToManyData["产品规格(Size)"][j];
+                worksheet.Cell(i, "K").Value = usedMaterial;
+                worksheet.Cell(i, "L").Value = $"TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
+                worksheet.Cell(i, "M").Value = excelData.OneToOneData["依据标准"];
+                worksheet.Cell(i, "N").Value = excelData.OneToManyData["单位"][j];
+                worksheet.Cell(i, "O").Value = excelData.OneToManyData["数量"][j];
+                worksheet.Cell(i, "T").Value = excelData.OneToOneData["批次"];
+                worksheet.Cell(i, "AB").Value = "产品质量证明文件";
+            }
+
+
+            return selfCheckTable;
+
+
+        }
+
+
+
+
+
+
+
         enum CertificateRowStatus
         {
             Empty,
@@ -184,6 +243,21 @@ namespace GenTemplateBJ
             }
             return productionCertificate;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         private InputExcelData? excelData;
