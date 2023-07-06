@@ -72,15 +72,15 @@ namespace GenTemplateBJ
 
         private XLWorkbook FillQualityList(string templateType)
         {
-            var qualityList = Utils.GetTemplateExcel(templateType, "质检文件.xlsx");
+            var qualityList = Utils.GetTemplateExcel(templateType, "4质检报告模版.xlsx");
             var worksheet = qualityList.Worksheet("检验报告-02804-01-4000-MP-R-M-8050");
             worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
             worksheet.Cell(4, "B").Value = excelData.OneToOneData["公司名称"];
             worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"];
             worksheet.Cell(6, "B").Value = excelData.OneToOneData["依据标准"];
             worksheet.Cell(7, "B").Value = excelData.OneToOneData["使用部分"];
-            worksheet.Cell(9, "B").Value = excelData.OneToOneData["材料名称"];
-            worksheet.Row(8).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
+
+            worksheet.Row(8).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length - 2);
             worksheet.Cell(9, "A").Value = excelData.OneToOneData["材料名称"];
             var end1 = 9 + excelData.OneToManyData["材料编码/设备位号"].Length;
             for (int i = 9; i < end1; i++)
@@ -92,11 +92,11 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "E").Value = excelData.OneToManyData["单位（Unit）"][j];
                 worksheet.Cell(i, "F").Value = excelData.OneToManyData["生产负责人"][j];
             }
-            worksheet.Row(end1 - 1).InsertRowsBelow(excelData.OneToManyData["试验项目"].Length - 1);
-            var end2 = end1 + excelData.OneToManyData["试验项目"].Length;
-            for (int i = end1; i < end2; i++)
+            worksheet.Row(end1 + 2).InsertRowsBelow(excelData.OneToManyData["试验项目"].Length - 1);
+            var end2 = end1 + excelData.OneToManyData["试验项目"].Length + 3;
+            for (int i = end1 + 3; i < end2; i++)
             {
-                int j = i - end1;
+                int j = i - end1 - 3;
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["试验项目"][j];
                 worksheet.Cell(i, "C").Value = excelData.OneToManyData["标准值"][j];
             }
