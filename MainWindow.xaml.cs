@@ -47,6 +47,11 @@ namespace GenTemplateBJ
                 {
                     value.SaveAs(Path.Combine(path, key));
                 }
+                foreach((var key, var value) in converter.OutputDocxs)
+                {
+                    using var stream = new FileStream(Path.Combine(path, key), FileMode.Create);
+                    value.Write(stream);
+                }
             }
         }
 

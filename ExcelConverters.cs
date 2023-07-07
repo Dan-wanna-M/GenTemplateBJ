@@ -32,6 +32,10 @@ namespace GenTemplateBJ
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
                     {"放行报告.xlsx", FillReleaseReport("川西") }
                 };
+                OutputDocxs = new()
+                {
+                    {"封面.docx", FillCoverPage("川西") }
+                };
             };
         }
 
@@ -39,7 +43,7 @@ namespace GenTemplateBJ
         {
             var transportList=Utils.GetTemplateExcel(templateType, "2送货单模版.xlsx");
             var worksheet = transportList.Worksheet(1);
-            worksheet.Cell(1, "C").Value = excelData.OneToOneData["项目名称"];
+            worksheet.Cell(1, "C").Value = excelData.OneToOneData["项目名称"]+ExcelData.OneToOneData["使用部分"];
             //worksheet.Cell(2, "C").Value = $"材料单({excelData.OneToOneData["工程类别"]})";
             worksheet.Cell(1, "G").Value = $"装箱单号: {excelData.OneToOneData["总箱数量"]}";
             worksheet.Cell(3, "C").Value = excelData.OneToOneData["材料名称"];
@@ -80,7 +84,7 @@ namespace GenTemplateBJ
             var worksheet = qualityList.Worksheet("检验报告-02804-01-4000-MP-R-M-8050");
             worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
             worksheet.Cell(4, "B").Value = excelData.OneToOneData["公司名称"];
-            worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"];
+            worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
             worksheet.Cell(6, "B").Value = excelData.OneToOneData["依据标准"];
             worksheet.Cell(7, "B").Value = excelData.OneToOneData["使用部分"];
 
@@ -156,18 +160,8 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "T").Value = excelData.OneToOneData["批次"];
                 worksheet.Cell(i, "AB").Value = "产品质量证明文件";
             }
-
-
             return selfCheckTable;
-
-
         }
-
-
-
-
-
-
 
         enum CertificateRowStatus
         {
@@ -259,7 +253,7 @@ namespace GenTemplateBJ
                     continue;
                 i.Delete();
             }
-            worksheet.Cell(3, 'C').Value = excelData.OneToOneData["项目名称"];
+            worksheet.Cell(3, 'C').Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
             worksheet.Cell(5, 'C').Value = excelData.OneToOneData["业主"];
             worksheet.Cell(7, 'C').Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(9, 'C').Value = excelData.OneToOneData["公司名称"];
@@ -298,6 +292,33 @@ namespace GenTemplateBJ
             return releaseReport;
         }
 
+        private XWPFDocument FillCoverPage(string templateType)
+        {
+            var document = Utils.GetTemplateDocument(templateType, "1封面模版.docx");
+            MessageBox.Show(document.Tables.Count.ToString());
+            foreach(var i in Utils.RecursiveParagraphsIterator(document))
+            {
+                i.ReplaceText("{业主}", excelData.OneToOneData["业主"]);
+                i.ReplaceText("{项目名称}", excelData.OneToOneData["项目名称"]);
+                i.ReplaceText("{站号}", excelData.OneToOneData["站号"]+"站");
+                i.ReplaceText("{使用部分}", excelData.OneToOneData["使用部分"]);
+                i.ReplaceText("{材料名称}", excelData.OneToOneData["材料名称"]);
+                i.ReplaceText("{合同号}", excelData.OneToOneData["合同号"]);
+                i.ReplaceText("{请购单号}", excelData.OneToOneData["请购单号"]);
+                i.ReplaceText("{版次}", excelData.OneToOneData["版次"]);
+                i.ReplaceText("{批次}", excelData.OneToOneData["批次"]);
+                i.ReplaceText("{供货商名称}", excelData.OneToOneData["公司名称"]);
+                i.ReplaceText("{地址}", excelData.OneToOneData["地址"]);
+                i.ReplaceText("{电话}", excelData.OneToOneData["电话"]);
+                i.ReplaceText("{传真}", excelData.OneToOneData["传真"]);
+                i.ReplaceText("{联系人}", excelData.OneToOneData["联系人"]);
+                i.ReplaceText("{公司名称}", excelData.OneToOneData["公司名称"]);
+                i.ReplaceText("{合同编号}", excelData.OneToOneData["合同号"]);
+                i.ReplaceText("{材料名称}", excelData.OneToOneData["材料名称"]);
+            }
+            return document;
+        }
+
         private InputExcelData? excelData;
         public InputExcelData? ExcelData { get=>excelData; set
             {
@@ -313,7 +334,17 @@ namespace GenTemplateBJ
             {
                 outputExcels = value;
                 OnPropertyChanged(nameof(OutputExcels));
-                OnPropertyChanged(nameof(IsOutputExcelsNotNull));
+                OnPropertyChanged(nameof(IsOutputsNotNull));
+            }
+        }
+        private Dictionary<string, XWPFDocument>? outputDocxs;
+        public Dictionary<string, XWPFDocument>? OutputDocxs
+        {
+            get => outputDocxs; set
+            {
+                outputDocxs = value;
+                OnPropertyChanged(nameof(OutputDocxs));
+                OnPropertyChanged(nameof(IsOutputsNotNull));
             }
         }
 
@@ -321,7 +352,7 @@ namespace GenTemplateBJ
 
         public bool IsExcelDataNotNull { get => ExcelData != null; }
 
-        public bool IsOutputExcelsNotNull { get => OutputExcels != null; }
+        public bool IsOutputsNotNull { get => OutputExcels != null && OutputDocxs!=null; }
 
         protected void OnPropertyChanged([CallerMemberName] string? name = null)
         {

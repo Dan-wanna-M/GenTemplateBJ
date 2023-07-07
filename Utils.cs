@@ -8,7 +8,9 @@ using Microsoft.Win32;
 using System.Windows;
 using System.IO;
 using Microsoft.WindowsAPICodePack.Dialogs;
-using DocumentFormat.OpenXml.Spreadsheet;
+using NPOI.XWPF;
+using NPOI.XWPF.UserModel;
+using NPOI.OpenXmlFormats.Dml;
 
 namespace GenTemplateBJ
 {
@@ -56,10 +58,15 @@ namespace GenTemplateBJ
             return data.Cells($"1:{data.LastCellUsed().Address.RowNumber}");
         }
 
-        public static XLWorkbook GetTemplateExcel(string templateType, string name)
+        private static string GetTemplatePath(string templateType, string name)
         {
             var folderPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
-            return new XLWorkbook(Path.Combine(folderPath, "Templates", templateType, name));
+            return Path.Combine(folderPath, "Templates", templateType, name);
+        }
+
+        public static XLWorkbook GetTemplateExcel(string templateType, string name)
+        {
+            return new XLWorkbook(GetTemplatePath(templateType, name));
         }
 
         public static int ColumnLetterToNumber(this IXLWorksheet sheet, string letter)
@@ -70,6 +77,34 @@ namespace GenTemplateBJ
         public static string ColumnNumberToLetter(this IXLWorksheet sheet, int number)
         {
             return sheet.Column(number).ColumnLetter();
+        }
+
+        public static XWPFDocument GetTemplateDocument(string templateType, string name)
+        {
+            using var stream = new FileStream(GetTemplatePath(templateType, name), FileMode.Open);
+            return new XWPFDocument(stream);
+        }
+
+        public static IEnumerable<XWPFParagraph> RecursiveParagraphsIterator(IBody body)
+        {
+            foreach (var i in body.Paragraphs)
+            {
+                yield return i;
+            }
+            foreach(var i in body.Tables)
+            {
+                
+                foreach (var j in i.Rows)
+                {
+                    foreach (var k in j.GetTableCells())
+                    {
+                        foreach (var p in RecursiveParagraphsIterator(k))
+                        {
+                            yield return p;
+                        }
+                    }
+                }
+            }
         }
     }
 }

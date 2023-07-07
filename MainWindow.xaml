@@ -19,7 +19,7 @@
                     <ComboBox Name="TemplateType" HorizontalAlignment="Center" Margin="0,10,0,0" ItemsSource="{Binding TemplateTypes}" SelectedIndex="0"/>
                 </StackPanel>
             </StackPanel>
-            <Button Name="Output" Content="导出" Margin="50,0,0,0" FontSize="36" Click="Output_Click" IsEnabled="{Binding IsOutputExcelsNotNull}"/>
+            <Button Name="Output" Content="导出" Margin="50,0,0,0" FontSize="36" Click="Output_Click" IsEnabled="{Binding IsOutputsNotNull}"/>
         </StackPanel>
 
         
