@@ -113,6 +113,12 @@ namespace GenTemplateBJ
             }
         }
 
+        public static string GetResourcePath(string filename)
+        {
+            var folderPath = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).Parent.Parent.Parent.FullName;
+            return Path.Combine(folderPath,"resources", filename);
+        }
+
         public static void AddSealToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth, int sealHeight)
         {
             var random = new Random();
@@ -120,9 +126,9 @@ namespace GenTemplateBJ
             image.Mutate(x => x.Rotate(rotationAngle));
             using MemoryStream ms = new();
             image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
-                var picture = worksheet.AddPicture(ms)
-                .MoveTo(cell)
-                .WithSize(sealWidth, sealHeight);
+            var picture = worksheet.AddPicture(ms);
+            picture.MoveTo(cell);
+            picture.WithSize(sealWidth, sealHeight);
         }
     }
 }

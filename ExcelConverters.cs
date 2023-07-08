@@ -187,6 +187,7 @@ namespace GenTemplateBJ
             int currentTop = 1;
             int initialTop = currentTop;
             var logo = worksheet.Pictures.Single();
+            Image<Rgba32> image = Image.Load<Rgba32>(Utils.GetResourcePath("qualityseal.png"));
             void AdjustWidth(int initialLeft, int current, int size)
             {
                 for (int i = current; i < current+size; i++)
@@ -239,9 +240,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3+3, currentLeft + firstCellHorizontalOffset).Value = quantity;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2 + 3 + 3+2, currentLeft + firstCellHorizontalOffset).Value = excelData.OneToOneData["出厂日期"];
-                //Image<Rgba32> image = Image.Load<Rgba32>("C: \\Users\\hyang\\Desktop\\qualitySeal.png");
-                //Utils.AddSealToExcel(worksheet, image, productionCertificate.Cell($"{currentLeft}{currentTop}"), 100, 100);
-
+                Utils.AddSealToExcel(worksheet, image.Clone(), worksheet.Cell(currentTop, currentLeft), 100, 100);
             }
             for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
             {
