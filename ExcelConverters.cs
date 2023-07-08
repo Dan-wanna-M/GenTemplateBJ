@@ -176,7 +176,7 @@ namespace GenTemplateBJ
             int currentLeft = worksheet.ColumnLetterToNumber("A");
             int initialLeft = currentLeft;
             int certificateWidth = worksheet.ColumnLetterToNumber("S") - currentLeft+1;
-            int certicateHeight = 28 - 3+1;
+            int certicateHeight = 26 - 1+1;
             int marginW = 1;
             int marginH = 1;
             var layoutState = CertificateRowStatus.Empty;
@@ -192,6 +192,7 @@ namespace GenTemplateBJ
             }
             void AdjustHeight(int initialTop, int current, int size)
             {
+                
                 for (int i = current; i < current + size; i++)
                 {
                     worksheet.Row(i).Height = worksheet.Row(initialTop + i - current).Height;
@@ -222,10 +223,10 @@ namespace GenTemplateBJ
                              .CopyTo(worksheet.Cell(currentTop+verticalShift, currentLeft - horizontalShift));
                         currentTop += verticalShift;
                         currentLeft -= horizontalShift;
+                        AdjustHeight(initialTop, currentTop, certicateHeight);
                         layoutState = CertificateRowStatus.LeftFull;
                         break;
                 }
-                AdjustHeight(currentTop, initialTop, certicateHeight);
                 int firstCellVerticalOffset = 8 - initialTop;
                 int firstCellHorizontalOffset = worksheet.ColumnLetterToNumber("H") - initialLeft;
                 logo.Duplicate().MoveTo(worksheet.Cell(currentTop + 1, currentLeft + worksheet.ColumnLetterToNumber("J") - initialLeft));
@@ -234,6 +235,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3+3, currentLeft + firstCellHorizontalOffset).Value = quantity;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2 + 3 + 3+2, currentLeft + firstCellHorizontalOffset).Value = excelData.OneToOneData["出厂日期"];
+
             }
             for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
             {
