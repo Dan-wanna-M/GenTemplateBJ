@@ -113,10 +113,9 @@ namespace GenTemplateBJ
             }
         }
 
-        public static void AddSealToExcel(IXLWorksheet worksheet, string imagePath, IXLCell cell, int sealWidth, int sealHeight)
+        public static void AddSealToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth, int sealHeight)
         {
             var random = new Random();
-            Image<Rgba32> image = Image.Load<Rgba32>(imagePath)
             float rotationAngle = (float)(random.NextDouble() * 70 - 35);
             image.Mutate(x => x.Rotate(rotationAngle));
             using MemoryStream ms = new();
