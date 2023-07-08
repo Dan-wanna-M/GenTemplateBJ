@@ -11,6 +11,12 @@ using Microsoft.WindowsAPICodePack.Dialogs;
 using NPOI.XWPF;
 using NPOI.XWPF.UserModel;
 using NPOI.OpenXmlFormats.Dml;
+using DocumentFormat.OpenXml.Spreadsheet;
+using NPOI.SS.Formula.Functions;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
+using static ICSharpCode.SharpZipLib.Zip.ExtendedUnixData;
+using SixLabors.ImageSharp.Processing;
 
 namespace GenTemplateBJ
 {
@@ -105,6 +111,18 @@ namespace GenTemplateBJ
                     }
                 }
             }
+        }
+
+        public static void AddSealToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth, int sealHeight)
+        {
+            var random = new Random();
+            float rotationAngle = (float)(random.NextDouble() * 70 - 35);
+            image.Mutate(x => x.Rotate(rotationAngle));
+            using MemoryStream ms = new();
+            image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+                var picture = worksheet.AddPicture(ms)
+                .MoveTo(cell)
+                .WithSize(sealWidth, sealHeight);
         }
     }
 }

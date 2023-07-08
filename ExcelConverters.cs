@@ -173,13 +173,14 @@ namespace GenTemplateBJ
         {
             var productionCertificate = Utils.GetTemplateExcel(templateType, "3产品合格证模版.xlsx");
             var worksheet = productionCertificate.Worksheet(1);
-            int certificateWidth = worksheet.ColumnLetterToNumber("W") - worksheet.ColumnLetterToNumber("E")+1;
+            int currentLeft = worksheet.ColumnLetterToNumber("A");
+            int initialLeft = currentLeft;
+            int certificateWidth = worksheet.ColumnLetterToNumber("S") - currentLeft+1;
             int certicateHeight = 28 - 3+1;
-            int marginW = 2;
-            int marginH = 2;
+            int marginW = 1;
+            int marginH = 1;
             var layoutState = CertificateRowStatus.Empty;
-            int currentLeft = worksheet.ColumnLetterToNumber("E");
-            int currentTop = 3;
+            int currentTop = 1;
             int initialTop = currentTop;
             var logo = worksheet.Pictures.Single();
             void AdjustWidth(int initialLeft, int current, int size)
@@ -196,7 +197,7 @@ namespace GenTemplateBJ
                     worksheet.Row(i).Height = worksheet.Row(initialTop + i - current).Height;
                 }
             }
-            AdjustWidth(currentLeft, worksheet.ColumnLetterToNumber("Z"), certificateWidth);
+            AdjustWidth(currentLeft, currentLeft+certificateWidth+marginW, certificateWidth);
             void AddOneCertificate(XLCellValue productSize, XLCellValue materialCode, XLCellValue quantity)
             {
                 int horizontalShift = certificateWidth + marginW;
@@ -225,9 +226,9 @@ namespace GenTemplateBJ
                         break;
                 }
                 AdjustHeight(currentTop, initialTop, certicateHeight);
-                int firstCellVerticalOffset = 10 - 3;
-                int firstCellHorizontalOffset = worksheet.ColumnLetterToNumber("L") - worksheet.ColumnLetterToNumber("E");
-                logo.Duplicate().MoveTo(worksheet.Cell(currentTop + 1, currentLeft + worksheet.ColumnLetterToNumber("P") - worksheet.ColumnLetterToNumber("E")));
+                int firstCellVerticalOffset = 8 - initialTop;
+                int firstCellHorizontalOffset = worksheet.ColumnLetterToNumber("H") - initialLeft;
+                logo.Duplicate().MoveTo(worksheet.Cell(currentTop + 1, currentLeft + worksheet.ColumnLetterToNumber("J") - initialLeft));
                 worksheet.Cell(currentTop + firstCellVerticalOffset, currentLeft+firstCellHorizontalOffset).Value = excelData.OneToOneData["材料名称"];
                 worksheet.Cell(currentTop + firstCellVerticalOffset+2, currentLeft + firstCellHorizontalOffset).Value = productSize;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
