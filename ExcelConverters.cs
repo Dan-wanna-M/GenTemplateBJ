@@ -15,6 +15,8 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using DocumentFormat.OpenXml.Spreadsheet;
+using NPOI.Util;
+using NPOI.OpenXmlFormats;
 
 namespace GenTemplateBJ
 {
@@ -22,10 +24,13 @@ namespace GenTemplateBJ
     {
         public List<string> TemplateTypes { get; } = new() {"请选择", "川西" };
         public Dictionary<string, Action> TemplateTypeToExcelConverter { get; } = new();
-
+        public List<(IXLWorksheet worksheet, Action<IXLWorksheet, IXLRow> TryApplyHeaderRow)> PreprintExcels { get; set; } = new();
         public ExcelConverters()
         {
-
+            var margins = Utils.GetTemplateDocument("川西", "1封面模版.docx").Document.body.sectPr.pgMar;
+            (double w, double h) paperSize = (11906, 16838);
+            var contentHeight = (paperSize.h - margins.top - margins.bottom) / 20;
+            var temp = contentHeight;
             TemplateTypeToExcelConverter["川西"] = () =>
             {
                 OutputExcels = new()
@@ -36,11 +41,77 @@ namespace GenTemplateBJ
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
                     {"放行报告.xlsx", FillReleaseReport("川西") }
                 };
+                PreprintExcels = new();
+                {
+                    PreprintExcels.Add(
+                    (OutputExcels["发货清单.xlsx"].Worksheet(1).CopyTo(new XLWorkbook()), (IXLWorksheet x, IXLRow y) =>
+                    {
+                        
+                        if (y.RowNumber() > 9 && y.RowNumber() < 9 + excelData.OneToManyData["材料编码/设备位号"].Length)
+                        {
+                            x.Row(9).CopyTo(y);
+                            y.Height = x.Row(9).Height;
+                        }
+                    }
+                    ));
+                    PreprintExcels.Add(
+                    (OutputExcels["质检报告.xlsx"].Worksheet("检验报告-02804-01-4000-MP-R-M-8050").CopyTo(new XLWorkbook()), (IXLWorksheet x, IXLRow y) =>
+                    {
+                        if (y.RowNumber() > 8 && y.RowNumber() < 8 + excelData.OneToManyData["材料编码/设备位号"].Length)
+                        {
+                            x.Row(8).CopyTo(y);
+                            y.Height = x.Row(8).Height;
+                        }
+                    }
+                    ));
+                    PreprintExcels.Add(
+                    (OutputExcels["放行报告.xlsx"].Worksheet(1).CopyTo(new XLWorkbook()), (IXLWorksheet x, IXLRow y) =>
+                    {
+                        if (y.RowNumber() > 14 && y.RowNumber() < 14 + excelData.OneToManyData["材料编码/设备位号"].Length)
+                        {
+                            x.Row(14).CopyTo(y);
+                            y.Height = x.Row(14).Height;
+                            y.InsertRowsBelow(1).Single().Height = x.Row(15).Height;
+                            foreach (var i in y.CellsUsed())
+                            {
+                                x.Range(i, i.CellBelow()).Merge();
+                            }
+                        }
+                    }
+                    ));
+                };
                 OutputDocxs = new()
                 {
                     {"封面.docx", FillCoverPage("川西") }
                 };
+                GeneratePreprintExcels();
             };
+        }
+
+        private void GeneratePreprintExcels()
+        {
+            var margins = OutputDocxs["封面.docx"].Document.body.sectPr.pgMar;
+            (double w, double h) paperSize = (11906, 16838);
+            var contentHeight = (paperSize.h - margins.top - margins.bottom) / 20;
+            var temp = contentHeight;
+            int temp2 = 0;
+            foreach ((var worksheet, var ApplyHeader) in PreprintExcels)
+            {
+                int count = worksheet.RowsUsed().Count();
+                for (int j = 1; j < count+1; j++)
+                {
+                    temp -= worksheet.Row(j).Height;
+                    if (temp - worksheet.Row(j+1).Height < 0)
+                    {
+                        worksheet.Row(j).InsertRowsBelow(1);
+                        ApplyHeader(worksheet, worksheet.Row(j+1));
+                        count = worksheet.RowsUsed().Count();
+                        temp = contentHeight + (temp - worksheet.Row(j).Height);
+                    }
+                }
+                temp2 += 1;
+                worksheet.Workbook.SaveAs($"temp{temp2}.xlsx");
+            }
         }
 
         private XLWorkbook FillTransportList(string templateType)
