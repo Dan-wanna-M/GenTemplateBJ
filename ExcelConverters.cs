@@ -67,11 +67,11 @@ namespace GenTemplateBJ
                     PreprintExcels.Add(
                     (OutputExcels["放行报告.xlsx"].Worksheet(1).CopyTo(new XLWorkbook()), (IXLWorksheet x, IXLRow y) =>
                     {
-                        if (y.RowNumber() > 14 && y.RowNumber() < 14 + excelData.OneToManyData["材料编码/设备位号"].Length)
+                        if (y.RowNumber() > 16 && y.RowNumber() < 16 + excelData.OneToManyData["材料编码/设备位号"].Length)
                         {
-                            x.Row(14).CopyTo(y);
-                            y.Height = x.Row(14).Height;
-                            y.InsertRowsBelow(1).Single().Height = x.Row(15).Height;
+                            x.Row(15).CopyTo(y);
+                            y.Height = x.Row(15).Height;
+                            y.InsertRowsBelow(1).Single().Height = x.Row(16).Height;
                             foreach (var i in y.CellsUsed())
                             {
                                 x.Range(i, i.CellBelow()).Merge();
@@ -92,11 +92,16 @@ namespace GenTemplateBJ
         {
             var margins = OutputDocxs["封面.docx"].Document.body.sectPr.pgMar;
             (double w, double h) paperSize = (11906, 16838);
-            var contentHeight = (paperSize.h - margins.top - margins.bottom) / 20;
-            var temp = contentHeight;
-            int temp2 = 0;
             foreach ((var worksheet, var ApplyHeader) in PreprintExcels)
             {
+                var contentHeight = worksheet.PageSetup.PageOrientation switch
+                {
+                    XLPageOrientation.Default => (paperSize.h - margins.top - margins.bottom) / 20,
+                    XLPageOrientation.Portrait => (paperSize.h - margins.top - margins.bottom) / 20,
+                    XLPageOrientation.Landscape => (paperSize.w - margins.top - margins.bottom) / 20,
+                };
+                var temp = contentHeight;
+                int temp2 = 0;
                 int count = worksheet.RowsUsed().Count();
                 for (int j = 1; j < count+1; j++)
                 {
@@ -332,17 +337,17 @@ namespace GenTemplateBJ
                     continue;
                 i.Delete();
             }
-            worksheet.Cell(3, 'C').Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
-            worksheet.Cell(5, 'C').Value = excelData.OneToOneData["业主"];
-            worksheet.Cell(7, 'C').Value = excelData.OneToOneData["材料名称"];
-            worksheet.Cell(9, 'C').Value = excelData.OneToOneData["公司名称"];
-            worksheet.Cell(11, 'C').Value = excelData.OneToOneData["供方地点"];
-            worksheet.Cell(3, 'G').Value = excelData.OneToOneData["使用部分"];
-            worksheet.Cell(5, 'G').Value = excelData.OneToOneData["请购单号"];
-            worksheet.Cell(7, 'G').Value = excelData.OneToOneData["合同号"];
-            worksheet.Cell(9, 'G').Value = excelData.OneToOneData["使用部分"];
-            worksheet.Cell(10, 'G').Value = excelData.OneToOneData["放行联系人"];
-            worksheet.Cell(11, 'G').Value = excelData.OneToOneData["放行联系人电话"];
+            worksheet.Cell(3, 3).Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
+            worksheet.Cell(5, 3).Value = excelData.OneToOneData["业主"];
+            worksheet.Cell(7, 3).Value = excelData.OneToOneData["材料名称"];
+            worksheet.Cell(9, 3).Value = excelData.OneToOneData["公司名称"];
+            worksheet.Cell(11, 3).Value = excelData.OneToOneData["供方地点"];
+            worksheet.Cell(3, 7).Value = excelData.OneToOneData["使用部分"];
+            worksheet.Cell(5, 7).Value = excelData.OneToOneData["请购单号"];
+            worksheet.Cell(7, 7).Value = excelData.OneToOneData["合同号"];
+            worksheet.Cell(9, 7).Value = excelData.OneToOneData["使用部分"];
+            worksheet.Cell(11, 7).Value = excelData.OneToOneData["放行联系人"];
+            worksheet.Cell(12, 7).Value = excelData.OneToOneData["放行联系人电话"];
             var height = worksheet.Row(16).Height;
             var heights = worksheet.Rows(17, 33).Select(x => x.Height);
             worksheet.Row(16).Delete();
