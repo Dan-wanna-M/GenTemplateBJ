@@ -45,7 +45,7 @@ namespace GenTemplateBJ
             {
                 foreach((var key, var value) in converter.OutputExcels) 
                 {
-                    value.SaveAs(Path.Combine(path, key));
+                    value.Workbook.SaveAs(Path.Combine(path, key));
                 }
                 foreach((var key, var value) in converter.OutputDocxs)
                 {
