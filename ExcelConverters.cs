@@ -290,7 +290,7 @@ namespace GenTemplateBJ
         }
         private XLWorkbook FillReleaseReport(string templateType)
         {
-            var releaseReport = Utils.GetTemplateExcel(templateType, "放行报告模版.xlsx");
+            var releaseReport = Utils.GetTemplateExcel(templateType, "9放行报告模版.xlsx");
             var worksheet = releaseReport.Worksheet(1);
             var tickbox = worksheet.Picture("图片 7");
             int horizontalTickBoxOffset = tickbox.GetOffset(ClosedXML.Excel.Drawings.XLMarkerPosition.TopLeft).X;
