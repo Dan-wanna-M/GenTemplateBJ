@@ -122,7 +122,7 @@ namespace GenTemplateBJ
         public static void AddSealToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth, int sealHeight)
         {
             var random = new Random();
-            float rotationAngle = (float)(random.NextDouble() * 70 - 35);
+            float rotationAngle = (float)(random.NextDouble() * 20 - 10);
             image.Mutate(x => x.Rotate(rotationAngle));
             using MemoryStream ms = new();
             image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
