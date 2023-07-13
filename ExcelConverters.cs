@@ -188,6 +188,7 @@ namespace GenTemplateBJ
             for (int i = 0; i < sortedList.Count(); i++)
             {
                 int flag = 0;
+
                 for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
                 {
                     if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
@@ -197,6 +198,10 @@ namespace GenTemplateBJ
                         worksheet.Cell(workline, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
                         worksheet.Cell(workline, "E").Value = excelData.OneToOneData["材料名称"];
                         worksheet.Cell(workline, "K").Value = excelData.OneToManyData["产品规格(Size)"][j];
+                        worksheet.Cell(workline, "W").Value = excelData.OneToManyData["单位（Unit）"][j];
+                        worksheet.Cell(workline, "AA").Value = excelData.OneToManyData["数量（Quantity）"][j];
+
+
                         worksheet.Cell(workline, "AP").Value = excelData.OneToManyData["箱号"][j];
                         worksheet.Row(workline).InsertRowsBelow(1);
                         worksheet.Range($"B{workline + 1}:D{workline + 1}").Merge();
