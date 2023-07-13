@@ -34,7 +34,8 @@ namespace GenTemplateBJ
                     { "质检报告.xlsx", FillQualityList("川西") },
                     { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
-                    {"放行报告.xlsx", FillReleaseReport("川西") }
+                    {"放行报告.xlsx", FillReleaseReport("川西") },
+                    {"装箱单.xlsx", FillPackingList("川西") }
                 };
                 InitializeExcelsPrintSetting();
                 AddCertificateSealToExcels();
@@ -145,6 +146,100 @@ namespace GenTemplateBJ
             return result;
         }
 
+
+        private ExcelWrapper FillPackingList(string templateType)
+        {
+            var packingList = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
+            var worksheet = packingList.Worksheet(1);
+            var result = new ExcelWrapper(packingList, packingList.Worksheet(1));
+            worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + excelData.OneToOneData["使用部分"];
+            worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
+            worksheet.Cell(1, "AG").Value = $"装箱单号: {excelData.OneToOneData["请购单号"]}-{excelData.OneToOneData["批次"]}";
+            //worksheet.Cell(2, "AG").Value = $"装箱单号: {excelData.OneToOneData["总箱数量"]}";
+            worksheet.Cell(4, "D").Value = excelData.OneToOneData["合同号"];
+            worksheet.Cell(5, "D").Value = excelData.OneToOneData["请购单号"];
+            worksheet.Cell(6, "D").Value = excelData.OneToOneData["发货日期"];
+            worksheet.Cell(7, "D").Value = excelData.OneToOneData["预计到达日期"];
+            worksheet.Cell(3, "W").Value = $"{excelData.OneToOneData["公司名称"]} {excelData.OneToOneData["发货人 电话"]}";
+            worksheet.Cell(4, "W").Value = excelData.OneToOneData["收货人 电话"];
+            worksheet.Cell(5, "W").Value = excelData.OneToOneData["承运商"];
+            worksheet.Cell(6, "W").Value = excelData.OneToOneData["运输方式"];
+            worksheet.Cell(7, "W").Value = excelData.OneToOneData["到货地点"];
+
+
+            List<string> packNumList = new List<string>();
+            for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
+            {
+                packNumList.Add($"{excelData.OneToManyData["箱号"][i]}");
+            }
+            IEnumerable<string> distinctValues = packNumList.Distinct();
+            int packNum = distinctValues.Count();
+            for (int i = 1; i < packNum; i++)
+            {
+                worksheet.Range("A1", "AQ11").CopyTo(worksheet.Cell($"A{1 + 12 * i}"));
+                Utils.AdjustHeight(worksheet, 1, 1 + 12 * i, 11);
+            }
+            List<int> sortedList = packNumList
+                .Select(int.Parse)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToList();
+            int flag2 = 0;
+            for (int i = 0; i < sortedList.Count(); i++)
+            {
+                int flag = 0;
+                for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
+                {
+                    if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
+                    {
+                        int workline = 10 + 12 * i + flag + flag2;
+                        worksheet.Cell(workline, "A").Value = flag + 1;
+                        worksheet.Cell(workline, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
+                        worksheet.Cell(workline, "E").Value = excelData.OneToOneData["材料名称"];
+                        worksheet.Cell(workline, "K").Value = excelData.OneToManyData["产品规格(Size)"][j];
+                        worksheet.Cell(workline, "AP").Value = excelData.OneToManyData["箱号"][j];
+                        worksheet.Row(workline).InsertRowsBelow(1);
+                        worksheet.Range($"B{workline + 1}:D{workline + 1}").Merge();
+                        worksheet.Range($"E{workline + 1}:J{workline + 1}").Merge();
+                        worksheet.Range($"K{workline + 1}:R{workline + 1}").Merge();
+                        worksheet.Range($"S{workline + 1}:V{workline + 1}").Merge();
+                        worksheet.Range($"Y{workline + 1}:Z{workline + 1}").Merge();
+                        worksheet.Range($"AA{workline + 1}:AC{workline + 1}").Merge();
+                        worksheet.Range($"AD{workline + 1}:AH{workline + 1}").Merge();
+                        worksheet.Range($"AP{workline + 1}:AQ{workline + 1}").Merge();
+                        flag++; 
+                    }
+
+
+                }
+                worksheet.Row(10 + 12 * i + flag + flag2).Delete();
+                flag2 += flag - 1;
+            }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            return result;
+        }
+
+
+
+
+
+
+
+
         private ExcelWrapper FillQualityList(string templateType)
         {
             var qualityList = Utils.GetTemplateExcel(templateType, "4质检报告模版.xlsx");
@@ -251,22 +346,8 @@ namespace GenTemplateBJ
             int currentTop = 1;
             int initialTop = currentTop;
             var logo = worksheet.Pictures.Single();
-            void AdjustWidth(int initialLeft, int current, int size)
-            {
-                for (int i = current; i < current+size; i++)
-                {
-                    worksheet.Column(i).Width = worksheet.Column(initialLeft + i - current).Width;
-                }
-            }
-            void AdjustHeight(int initialTop, int current, int size)
-            {
-                
-                for (int i = current; i < current + size; i++)
-                {
-                    worksheet.Row(i).Height = worksheet.Row(initialTop + i - current).Height;
-                }
-            }
-            AdjustWidth(currentLeft, currentLeft+certificateWidth+marginW, certificateWidth);
+
+            Utils.AdjustWidth(worksheet, currentLeft, currentLeft+certificateWidth+marginW, certificateWidth);
             void AddOneCertificate(XLCellValue productSize, XLCellValue materialCode, XLCellValue quantity)
             {
                 int horizontalShift = certificateWidth + marginW;
@@ -291,7 +372,7 @@ namespace GenTemplateBJ
                              .CopyTo(worksheet.Cell(currentTop+verticalShift, currentLeft - horizontalShift));
                         currentTop += verticalShift;
                         currentLeft -= horizontalShift;
-                        AdjustHeight(initialTop, currentTop, certicateHeight);
+                        Utils.AdjustHeight(worksheet, initialTop, currentTop, certicateHeight);
                         layoutState = CertificateRowStatus.LeftFull;
                         break;
                 }

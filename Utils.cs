@@ -130,5 +130,20 @@ namespace GenTemplateBJ
             picture.MoveTo(cell);
             picture.WithSize(sealWidth, sealHeight);
         }
+        public static void AdjustWidth(IXLWorksheet worksheet, int initialLeft, int current, int size)
+        {
+            for (int i = current; i < current + size; i++)
+            {
+                worksheet.Column(i).Width = worksheet.Column(initialLeft + i - current).Width;
+            }
+        }
+        public static void AdjustHeight(IXLWorksheet worksheet, int initialTop, int current, int size)
+        {
+
+            for (int i = current; i < current + size; i++)
+            {
+                worksheet.Row(i).Height = worksheet.Row(initialTop + i - current).Height;
+            }
+        }
     }
 }
