@@ -54,17 +54,25 @@ namespace GenTemplateBJ
 
             void AddSeal(IXLWorksheet worksheet)
             {
-                var first = 0;
+                var first = 1;
                 var halfwidth = worksheet.ColumnsUsed().Select(x=>x.Width).Sum()/2;
                 worksheet.PageSetup.RowBreaks.Sort();
-                Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.PageSetup.RowBreaks[0]) / 2+1, 1), 280, 280);
-                first = worksheet.PageSetup.RowBreaks[0];
-                foreach (var i in worksheet.PageSetup.RowBreaks.Skip(1))
+                if(worksheet.PageSetup.RowBreaks.Count > 0) 
                 {
-                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first+i)/2-4,1), 280, 280);
-                    first = i;
+                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.PageSetup.RowBreaks[0]) / 2 + 1, 1), 280, 280);
+                    first = worksheet.PageSetup.RowBreaks[0];
+                    foreach (var i in worksheet.PageSetup.RowBreaks.Skip(1))
+                    {
+                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + i) / 2 - 4, 1), 280, 280);
+                        first = i;
+                    }
+                    if (worksheet.PageSetup.RowBreaks.Count > 1)
+                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.LastRowUsed().RowNumber()) / 2 - 4, 1), 280, 280);
                 }
-                Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.LastRowUsed().RowNumber()) / 2 - 4, 1), 280, 280);
+                else
+                {
+                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.LastRowUsed().RowNumber()) / 2 + 1, 1), 280, 280);
+                }
             }
             AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single());
             AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single());
@@ -76,33 +84,24 @@ namespace GenTemplateBJ
             var margins = Utils.GetTemplateDocument("川西", "1封面模版.docx").Document.body.sectPr.pgMar;
             (double w, double h) paperSize = (11906, 16838);
             var contentHeight = (paperSize.h - margins.top - margins.bottom) / 20;
-            OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single().PageSetup.SetRowsToRepeatAtTop(8,8);
-            OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single().PageSetup.PagesWide = 1;
-            OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(44);
-            for (int i = 48; i < 8 + excelData.OneToManyData["材料编码/设备位号"].Length; i++)
+            void SetPrintSetting(IXLWorksheet worksheet, int headerRowStart, int headerRowEnd, int firstPageEndRow, int rowsForOnePage)
             {
-                if ((i - 47) % (40) == 0)
-                    OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(i);
+                worksheet.PageSetup.SetRowsToRepeatAtTop(headerRowStart, headerRowEnd);
+                worksheet.PageSetup.PagesWide = 1;
+                if (headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length > firstPageEndRow)
+                {
+                    worksheet.PageSetup.AddHorizontalPageBreak(firstPageEndRow);
+                    for (int i = firstPageEndRow+4; i < headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length; i++)
+                    {
+                        if ((i - firstPageEndRow + 3) % (rowsForOnePage) == 0)
+                            worksheet.PageSetup.AddHorizontalPageBreak(i);
+                    }
+                    worksheet.PageSetup.AddHorizontalPageBreak(8 + excelData.OneToManyData["材料编码/设备位号"].Length - 2);
+                }
             }
-            OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(8 + excelData.OneToManyData["材料编码/设备位号"].Length-2);
-            OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single().PageSetup.SetRowsToRepeatAtTop(9, 9);
-            OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single().PageSetup.PagesWide = 1;
-            OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(29);
-            for(int i = 33; i < 9 + excelData.OneToManyData["材料编码/设备位号"].Length;i++)
-            {
-                if ((i-32)%(25)==0)
-                    OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(i);
-            }
-            OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(9 + excelData.OneToManyData["材料编码/设备位号"].Length - 2);
-            OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().PageSetup.SetRowsToRepeatAtTop(14, 15);
-            OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().PageSetup.PagesWide = 1;
-            OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(26);
-            for (int i = 30; i < 15 + excelData.OneToManyData["材料编码/设备位号"].Length; i++)
-            {
-                if ((i - 29) % (18) == 0)
-                    OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(i);
-            }
-            OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().PageSetup.AddHorizontalPageBreak(15 + excelData.OneToManyData["材料编码/设备位号"].Length-2);
+            SetPrintSetting(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(), 8, 8, 44, 40);
+            SetPrintSetting(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 9, 9, 29, 25);
+            SetPrintSetting(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 14, 15, 26, 18);
         }
 
         
