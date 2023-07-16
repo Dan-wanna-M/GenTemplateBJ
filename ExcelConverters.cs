@@ -154,7 +154,6 @@ namespace GenTemplateBJ
             worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + excelData.OneToOneData["使用部分"];
             worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(1, "AG").Value = $"装箱单号: {excelData.OneToOneData["请购单号"]}-{excelData.OneToOneData["批次"]}";
-            //worksheet.Cell(2, "AG").Value = $"装箱单号: {excelData.OneToOneData["总箱数量"]}";
             worksheet.Cell(4, "D").Value = excelData.OneToOneData["合同号"];
             worksheet.Cell(5, "D").Value = excelData.OneToOneData["请购单号"];
             worksheet.Cell(6, "D").Value = excelData.OneToOneData["发货日期"];
@@ -187,7 +186,7 @@ namespace GenTemplateBJ
             for (int i = 0; i < sortedList.Count(); i++)
             {
                 int flag = 0;
-
+                worksheet.Cell(2 + 12 * i + flag2, "AG").Value = $"共{packNum}箱   第{i + 1}箱";
                 for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
                 {
                     if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
