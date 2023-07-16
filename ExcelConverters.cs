@@ -48,11 +48,48 @@ namespace GenTemplateBJ
                 };
             };
         }
+        public static XLWorkbook ConvertFactoryData(XLWorkbook dataExample, XLWorkbook mapping, XLWorkbook originalTest)
+        {
+            var worksheet1 = dataExample.Worksheet(1);
 
+            var worksheet2 = mapping.Worksheet(1);
+
+            var worksheet3 = originalTest.Worksheet(1);
+
+            Dictionary<string, string> deviceCodeMapping = new();
+
+            foreach (var row in worksheet2.RowsUsed().Skip(3))
+            {
+                var deviceCode1 = row.Cell("F").GetValue<string>();
+                var deviceCode2 = row.Cell("V").CachedValue.ToString();
+                deviceCodeMapping[deviceCode1] = deviceCode2;
+                //Console.WriteLine(deviceCode1 + " " + deviceCode2);
+            }
+
+            int i = 2;
+            foreach (var row in worksheet1.RowsUsed().Skip(1))
+            {
+
+                var deviceDesignator1 = row.Cell(1).GetValue<string>();
+                var caseNumber = row.Cell(2).GetValue<string>();
+                Console.WriteLine(1);
+
+
+                if (deviceCodeMapping.ContainsKey(deviceDesignator1))
+                {
+                    var deviceCode2 = deviceCodeMapping[deviceDesignator1];
+                    Console.WriteLine($"Code2: {deviceCode2}, Case Number: {caseNumber}");
+                    worksheet3.Cell(i, "C").Value = deviceCode2;
+                    worksheet3.Cell(i, "M").Value = caseNumber;
+                    i++;
+                }
+            }
+            return originalTest;
+        }
         private void AddCertificateSealToExcels()
         {
 
-            void AddSeal(IXLWorksheet worksheet)
+            void AddSeal(IXLWorksheet worksheet, int lastDataRow, int headerRowEnd)
             {
                 var first = 1;
                 var halfwidth = worksheet.ColumnsUsed().Select(x=>x.Width).Sum()/2;
@@ -73,10 +110,14 @@ namespace GenTemplateBJ
                 {
                     Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.LastRowUsed().RowNumber()) / 2 + 1, 1), 280, 280);
                 }
+                if(headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length>lastDataRow)
+                {
+                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(), 1), 280, 280);
+                }
             }
-            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single());
-            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single());
-            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single());
+            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8);
+            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9);
+            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15);
         }
 
         private void InitializeExcelsPrintSetting()
@@ -86,10 +127,10 @@ namespace GenTemplateBJ
             var contentHeight = (paperSize.h - margins.top - margins.bottom) / 20;
             void SetPrintSetting(IXLWorksheet worksheet, int headerRowStart, int headerRowEnd, int firstPageEndRow, int rowsForOnePage)
             {
-                worksheet.PageSetup.SetRowsToRepeatAtTop(headerRowStart, headerRowEnd);
                 worksheet.PageSetup.PagesWide = 1;
                 if (headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length > firstPageEndRow)
                 {
+                    worksheet.PageSetup.SetRowsToRepeatAtTop(headerRowStart, headerRowEnd);
                     worksheet.PageSetup.AddHorizontalPageBreak(firstPageEndRow);
                     for (int i = firstPageEndRow+4; i < headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length; i++)
                     {
