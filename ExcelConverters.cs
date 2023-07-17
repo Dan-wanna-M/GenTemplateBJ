@@ -89,40 +89,40 @@ namespace GenTemplateBJ
         private void AddCertificateSealToExcels()
         {
 
-            void AddSeal(IXLWorksheet worksheet, int lastDataRow, int headerRowEnd)
+            void AddSeal(IXLWorksheet worksheet, int lastDataRow, int headerRowEnd, int horizontalOffsetFromRight, int verticalOffsetFromBottom)
             {
                 var first = 1;
                 var halfwidth = worksheet.ColumnsUsed().Select(x=>x.Width).Sum()/2;
                 worksheet.PageSetup.RowBreaks.Sort();
                 if(worksheet.PageSetup.RowBreaks.Count > 0) 
                 {
-                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.PageSetup.RowBreaks[0]) / 2 + 1,
-                        worksheet.LastColumnUsed().ColumnNumber() - 4), 280, 280);
+                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.PageSetup.RowBreaks[0]-verticalOffsetFromBottom,
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
                     first = worksheet.PageSetup.RowBreaks[0];
                     foreach (var i in worksheet.PageSetup.RowBreaks.Skip(1))
                     {
-                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + i) / 2 - 4,
-                            worksheet.LastColumnUsed().ColumnNumber() - 4), 280, 280);
+                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(i-verticalOffsetFromBottom,
+                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
                         first = i;
                     }
                     if (worksheet.PageSetup.RowBreaks.Count > 1)
-                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.LastRowUsed().RowNumber()) / 2 - 4,
-                            worksheet.LastColumnUsed().ColumnNumber()-4), 280, 280);
+                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
+                            worksheet.LastColumnUsed().ColumnNumber()-horizontalOffsetFromRight), 280, 280);
                 }
                 else
                 {
-                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell((first + worksheet.LastRowUsed().RowNumber()) / 2 + 1, 
-                        worksheet.LastColumnUsed().ColumnNumber() - 4), 280, 280);
+                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom, 
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
                 }
                 if(headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length>lastDataRow)
                 {
                     Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(), 
-                        worksheet.LastColumnUsed().ColumnNumber() - 4), 280, 280);
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
                 }
             }
-            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8);
-            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9);
-            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15);
+            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 2, 4);
+            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4, 4);
+            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2, 4);
         }
 
         private void InitializeExcelsPrintSetting()
