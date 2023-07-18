@@ -197,9 +197,11 @@ namespace GenTemplateBJ
             var packingList = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
             var worksheet = packingList.Worksheet(1);
             var result = new ExcelWrapper(packingList, packingList.Worksheet(1));
-            worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + excelData.OneToOneData["使用部分"];
+            worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + "  " + excelData.OneToOneData["使用部分"];
+            //worksheet.Cell(1, "I").Style.Font.FontSize = 18;
             worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(1, "AG").Value = $"装箱单号: {excelData.OneToOneData["请购单号"]}-{excelData.OneToOneData["批次"]}";
+            //worksheet.Cell(1, "AG").Style.Font.FontSize = 12;
             worksheet.Cell(4, "D").Value = excelData.OneToOneData["合同号"];
             worksheet.Cell(5, "D").Value = excelData.OneToOneData["请购单号"];
             worksheet.Cell(6, "D").Value = excelData.OneToOneData["发货日期"];
@@ -272,7 +274,7 @@ namespace GenTemplateBJ
             var qualityList = Utils.GetTemplateExcel(templateType, "4质检报告模版.xlsx");
             var worksheet = qualityList.Worksheet("检验报告-02804-01-4000-MP-R-M-8050");
             var result = new ExcelWrapper(qualityList, worksheet);
-            worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
+            worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-{DateTime.Now.Year}{DateTime.Now.Month.ToString("D2")}-{excelData.OneToOneData["质检报告编号"]}";
             worksheet.Cell(4, "B").Value = excelData.OneToOneData["公司名称"];
             worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
             worksheet.Cell(6, "B").Value = excelData.OneToOneData["依据标准"];
@@ -290,14 +292,21 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "E").Value = excelData.OneToManyData["单位（Unit）"][j];
                 worksheet.Cell(i, "F").Value = excelData.OneToManyData["生产负责人"][j];
             }
-            worksheet.Row(end1 + 2).InsertRowsBelow(excelData.OneToManyData["试验项目"].Length);
             var end2 = end1 + excelData.OneToManyData["试验项目"].Length + 3;
+            int flag = 0;
             for (int i = end1 + 3; i < end2; i++)
             {
                 int j = i - end1 - 3;
-                worksheet.Cell(i, "B").Value = excelData.OneToManyData["试验项目"][j];
-                worksheet.Cell(i, "C").Value = excelData.OneToManyData["标准值"][j];
-                worksheet.Range(string.Format("C{0}", i), string.Format("D{0}", i)).Merge();
+                if (excelData.OneToManyData["试验项目"][j].ToString() != string.Empty)
+                {
+                    worksheet.Row(end1 + 2 + flag).InsertRowsBelow(1);
+                    worksheet.Cell(i, "A").Value = excelData.OneToManyData["试验项目"][j];
+                    worksheet.Cell(i, "C").Value = excelData.OneToManyData["标准值"][j];
+                    worksheet.Range(string.Format("A{0}", i), string.Format("B{0}", i)).Merge();
+                    worksheet.Range(string.Format("C{0}", i), string.Format("D{0}", i)).Merge();
+                    flag ++;
+                }
+   
             }
 
             worksheet.Range("A9", string.Format("A{0}", end1 - 1)).Merge();
