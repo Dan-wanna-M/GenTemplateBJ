@@ -23,9 +23,11 @@ namespace GenTemplateBJ
         public Dictionary<string, Action> TemplateTypeToExcelConverter { get; } = new();
 
         public Image<Rgba32> Seal { get; private set; }
+        public Image<Rgba32> Logo { get; private set; }
         public ExcelConverters()
         {
             Seal = Image.Load<Rgba32>(Utils.GetResourcePath("qualityseal.png"));
+            Logo = Image.Load<Rgba32>(Utils.GetResourcePath("logo.jpg"));
             TemplateTypeToExcelConverter["川西"] = () =>
             {
                 OutputExcels = new()
@@ -96,28 +98,28 @@ namespace GenTemplateBJ
                 worksheet.PageSetup.RowBreaks.Sort();
                 if(worksheet.PageSetup.RowBreaks.Count > 0) 
                 {
-                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.PageSetup.RowBreaks[0]-verticalOffsetFromBottom,
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.PageSetup.RowBreaks[0]-verticalOffsetFromBottom,
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
                     first = worksheet.PageSetup.RowBreaks[0];
                     foreach (var i in worksheet.PageSetup.RowBreaks.Skip(1))
                     {
-                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(i-verticalOffsetFromBottom,
-                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
+                        Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(i-verticalOffsetFromBottom,
+                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
                         first = i;
                     }
                     if (worksheet.PageSetup.RowBreaks.Count > 1)
-                        Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
-                            worksheet.LastColumnUsed().ColumnNumber()-horizontalOffsetFromRight), 280, 280);
+                        Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
+                            worksheet.LastColumnUsed().ColumnNumber()-horizontalOffsetFromRight), 280, 280, "seal");
                 }
                 else
                 {
-                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom, 
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom, 
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
                 }
                 if(headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length>lastDataRow)
                 {
-                    Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(), 
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280);
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(), 
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
                 }
             }
             AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 2, 4);
@@ -197,11 +199,10 @@ namespace GenTemplateBJ
             var packingList = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
             var worksheet = packingList.Worksheet(1);
             var result = new ExcelWrapper(packingList, packingList.Worksheet(1));
+            Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 230, 115);
             worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + "  " + excelData.OneToOneData["使用部分"];
-            //worksheet.Cell(1, "I").Style.Font.FontSize = 18;
             worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(1, "AG").Value = $"装箱单号: {excelData.OneToOneData["请购单号"]}-{excelData.OneToOneData["批次"]}";
-            //worksheet.Cell(1, "AG").Style.Font.FontSize = 12;
             worksheet.Cell(4, "D").Value = excelData.OneToOneData["合同号"];
             worksheet.Cell(5, "D").Value = excelData.OneToOneData["请购单号"];
             worksheet.Cell(6, "D").Value = excelData.OneToOneData["发货日期"];
@@ -420,7 +421,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3+3, currentLeft + firstCellHorizontalOffset).Value = quantity;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2 + 3 + 3+2, currentLeft + firstCellHorizontalOffset).Value = excelData.OneToOneData["出厂日期"];
-                Utils.AddSealToExcel(worksheet, Seal.Clone(), worksheet.Cell(currentTop + 13, currentLeft + 5), 170, 170);
+                Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(currentTop + 13, currentLeft + 5), 170, 170);
             }
             for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
             {
@@ -433,6 +434,7 @@ namespace GenTemplateBJ
             var releaseReport = Utils.GetTemplateExcel(templateType, "9放行报告模版.xlsx");
             var worksheet = releaseReport.Worksheet(1);
             var result = new ExcelWrapper(releaseReport, worksheet);
+            
             var tickbox = worksheet.Picture("图片 7");
             int horizontalTickBoxOffset = tickbox.GetOffset(ClosedXML.Excel.Drawings.XLMarkerPosition.TopLeft).X;
             tickbox = tickbox.Duplicate();
@@ -478,6 +480,7 @@ namespace GenTemplateBJ
                 tickbox = tickbox.Duplicate();
             }
             tickbox.Delete();
+            Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 200, 115);
             return result;
         }
 
