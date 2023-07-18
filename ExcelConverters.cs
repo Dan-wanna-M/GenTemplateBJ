@@ -255,7 +255,7 @@ namespace GenTemplateBJ
                         worksheet.Range($"E{workline + 1}:J{workline + 1}").Merge();
                         worksheet.Range($"K{workline + 1}:R{workline + 1}").Merge();
                         worksheet.Range($"S{workline + 1}:V{workline + 1}").Merge();
-                        worksheet.Range($"Y{workline + 1}:Z{workline + 1}").Merge();
+                        worksheet.Range($"W{workline + 1}:Z{workline + 1}").Merge();
                         worksheet.Range($"AA{workline + 1}:AC{workline + 1}").Merge();
                         worksheet.Range($"AD{workline + 1}:AH{workline + 1}").Merge();
                         worksheet.Range($"AP{workline + 1}:AQ{workline + 1}").Merge();
