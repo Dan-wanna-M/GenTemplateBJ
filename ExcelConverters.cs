@@ -158,8 +158,7 @@ namespace GenTemplateBJ
             var transportList=Utils.GetTemplateExcel(templateType, "2送货单模版.xlsx");
             var worksheet = transportList.Worksheet(1);
             var result = new ExcelWrapper(transportList, transportList.Worksheet(1));
-            worksheet.Cell(1, "C").Value = excelData.OneToOneData["项目名称"]+ExcelData.OneToOneData["使用部分"];
-            //worksheet.Cell(2, "C").Value = $"材料单({excelData.OneToOneData["工程类别"]})";
+            worksheet.Cell(1, "C").Value = excelData.OneToOneData["项目名称"];
             worksheet.Cell(1, "G").Value = $"装箱单号: {excelData.OneToOneData["总箱数量"]}";
             worksheet.Cell(3, "C").Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(4, "C").Value = excelData.OneToOneData["合同号"];
@@ -183,7 +182,9 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "A").Value = i - 9;
                 int j = i - 10;
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
-                worksheet.Cell(i, "C").Value = excelData.OneToManyData["产品规格(Size)"][j];
+                worksheet.Cell(i, "C").Value = excelData.OneToOneData["产品名称"];
+                worksheet.Cell(i, "D").Value = excelData.OneToManyData["产品规格(Size)"][j];
+                worksheet.Cell(i, "E").Value = excelData.OneToManyData["材质＆标准（描述）"][j];
                 worksheet.Cell(i, "F").Value = excelData.OneToManyData["单位（Unit）"][j];
                 worksheet.Cell(i, "G").Value = excelData.OneToManyData["数量（Quantity）"][j];
                 worksheet.Cell(i, "H").Value = excelData.OneToManyData["箱号"][j];
@@ -277,7 +278,7 @@ namespace GenTemplateBJ
             var result = new ExcelWrapper(qualityList, worksheet);
             worksheet.Cell(3, "A").Value = $"报告编号: TJMZLBG-{DateTime.Now.Year}{DateTime.Now.Month.ToString("D2")}-{excelData.OneToOneData["质检报告编号"]}";
             worksheet.Cell(4, "B").Value = excelData.OneToOneData["公司名称"];
-            worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
+            worksheet.Cell(5, "B").Value = excelData.OneToOneData["项目名称"];
             worksheet.Cell(6, "B").Value = excelData.OneToOneData["依据标准"];
             worksheet.Cell(7, "B").Value = excelData.OneToOneData["使用部分"];
 
