@@ -410,7 +410,7 @@ namespace GenTemplateBJ
                              .CopyTo(worksheet.Cell(currentTop+verticalShift, currentLeft - horizontalShift));
                         currentTop += verticalShift;
                         currentLeft -= horizontalShift;
-                        Utils.AdjustHeight(worksheet, initialTop, currentTop, certicateHeight);
+                        Utils.AdjustHeight(worksheet, initialTop, currentTop, certicateHeight+marginH);
                         layoutState = CertificateRowStatus.LeftFull;
                         break;
                 }
