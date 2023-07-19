@@ -422,7 +422,11 @@ namespace GenTemplateBJ
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3+3, currentLeft + firstCellHorizontalOffset).Value = quantity;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2 + 3 + 3+2, currentLeft + firstCellHorizontalOffset).Value = excelData.OneToOneData["出厂日期"];
-                Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(currentTop + 10, currentLeft + 5), 165, 165, "random");
+                Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(currentTop + 9, currentLeft + 5), 165, 165, "random");
+                if((currentTop-1)%81==0)
+                {
+                    worksheet.PageSetup.AddHorizontalPageBreak(currentTop-1);
+                }
             }
             for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
             {
