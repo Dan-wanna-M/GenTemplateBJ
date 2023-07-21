@@ -487,7 +487,6 @@ namespace GenTemplateBJ
                     continue;
                 i.Delete();
             }
-            releaseReport.SaveAs("D:\\PML\\GenTemplateBJ\\debug.xlsx");
             worksheet.Cell(3, 3).Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
             worksheet.Cell(5, 3).Value = excelData.OneToOneData["业主"];
             worksheet.Cell(7, 3).Value = excelData.OneToOneData["材料名称"];
