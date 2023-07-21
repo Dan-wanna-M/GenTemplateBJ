@@ -119,7 +119,7 @@ namespace GenTemplateBJ
             return Path.Combine(folderPath,"resources", filename);
         }
 
-        public static void AddPictureToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth, int sealHeight, string _random)
+        public static void AddPictureToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth)
         {
             var random = new Random();
             float rotationAngle = (float)(random.NextDouble() * 20 - 10);
@@ -128,15 +128,15 @@ namespace GenTemplateBJ
             image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
             var picture = worksheet.AddPicture(ms);
             picture.MoveTo(cell);
-            picture.WithSize(sealWidth, sealHeight);
+            picture.WithSize(sealWidth, sealWidth * 390/516);
         }
-        public static void AddPictureToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int sealWidth, int sealHeight)
+        public static void AddPictureToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int pictureWidth, int pictureHeight)
         {
             using MemoryStream ms = new();
             image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
             var picture = worksheet.AddPicture(ms);
             picture.MoveTo(cell);
-            picture.WithSize(sealWidth, sealHeight);
+            picture.WithSize(pictureWidth, pictureHeight);
         }
 
         public static void AdjustWidth(IXLWorksheet worksheet, int initialLeft, int current, int size)

@@ -99,27 +99,27 @@ namespace GenTemplateBJ
                 if(worksheet.PageSetup.RowBreaks.Count > 0) 
                 {
                     Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.PageSetup.RowBreaks[0]-verticalOffsetFromBottom,
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                     first = worksheet.PageSetup.RowBreaks[0];
                     foreach (var i in worksheet.PageSetup.RowBreaks.Skip(1))
                     {
                         Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(i-verticalOffsetFromBottom,
-                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
+                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                         first = i;
                     }
                     if (worksheet.PageSetup.RowBreaks.Count > 1)
                         Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
-                            worksheet.LastColumnUsed().ColumnNumber()-horizontalOffsetFromRight), 280, 280, "seal");
+                            worksheet.LastColumnUsed().ColumnNumber()-horizontalOffsetFromRight), 280);
                 }
                 else
                 {
                     Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom, 
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                 }
                 if(headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length>lastDataRow)
                 {
                     Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(), 
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280, 280, "seal");
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                 }
             }
             AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 2, 4);
@@ -422,7 +422,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3, currentLeft + firstCellHorizontalOffset).Value = materialCode;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2+3+3, currentLeft + firstCellHorizontalOffset).Value = quantity;
                 worksheet.Cell(currentTop + firstCellVerticalOffset + 2 + 3 + 3+2, currentLeft + firstCellHorizontalOffset).Value = excelData.OneToOneData["出厂日期"];
-                Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(currentTop + 10, currentLeft + 5), 165, 165, "random");
+                Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(currentTop + 13, currentLeft + 5), 215);
             }
             for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
             {
