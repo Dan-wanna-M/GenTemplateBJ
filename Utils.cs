@@ -17,6 +17,10 @@ using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using static ICSharpCode.SharpZipLib.Zip.ExtendedUnixData;
 using SixLabors.ImageSharp.Processing;
+using DocumentFormat.OpenXml.Math;
+using DocumentFormat.OpenXml.Office.CustomUI;
+using System.Numerics;
+using Color = SixLabors.ImageSharp.Color;
 
 namespace GenTemplateBJ
 {
@@ -123,9 +127,10 @@ namespace GenTemplateBJ
         {
             var random = new Random();
             float rotationAngle = (float)(random.NextDouble() * 20 - 10);
-            image.Mutate(x => x.Rotate(rotationAngle));
+            image.Mutate(c => c.Resize(Math.Max(image.Height, image.Width)/2, Math.Max(image.Height, image.Width)/2, KnownResamplers.Lanczos3).Rotate(rotationAngle));
             using MemoryStream ms = new();
-            image.Save(ms, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+            var encoder = new SixLabors.ImageSharp.Formats.Png.PngEncoder();
+            image.Save(ms, encoder);
             var picture = worksheet.AddPicture(ms);
             picture.MoveTo(cell);
             picture.WithSize(sealWidth, sealWidth * 390/516);
