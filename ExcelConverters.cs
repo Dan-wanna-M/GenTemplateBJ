@@ -105,24 +105,22 @@ namespace GenTemplateBJ
                             worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                         first = i;
                     }
-                    if (worksheet.PageSetup.RowBreaks.Count > 1)
-                        Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
-                            worksheet.LastColumnUsed().ColumnNumber()-horizontalOffsetFromRight), 280);
                 }
                 else
                 {
                     Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom, 
                         worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                    if (headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length > lastDataRow)
+                    {
+                        Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(),
+                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                    }
                 }
-                if(headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length>lastDataRow)
-                {
-                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(), 
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
-                }
+
             }
-            // AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 2, 4);
-            // AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4, 4);
-            // AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2, 4);
+            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 3, 8);
+            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4, 5);
+            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2, 5);
         }
 
         private void InitializeExcelsPrintSetting()
@@ -148,12 +146,17 @@ namespace GenTemplateBJ
                 var end = startRow.LastCellUsed().Address.ColumnNumber;
                 startRow.CopyTo(endRow.Cell(1));
                 worksheet.Row(x.end).CopyTo(worksheet.Cell(y.end, 1));
-                worksheet.Range(worksheet.Cell(y.begin, 'C'), worksheet.Cell(y.begin, 'C').CellRight()).Merge();
+                worksheet.Range($"C{y.begin}:D{y.end}").Merge();
                 for (int i = 1; i < end+1; i++)
                 {
+                    if(i ==3||i== 4)
+                    {
+                        continue;
+                    }
                     worksheet.Range(worksheet.Cell(y.begin, i), worksheet.Cell(y.end, i)).Merge();
                 }
             });
+            OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().Range("BE:BP").Delete(XLShiftDeletedCells.ShiftCellsLeft); // 由于某些未知原因，去掉之后结果会很诡异。
         }
 
         private void GeneratePreprintExcels(ExcelWrapper wrapper, int headerRowStart, int headerRowEnd, double percentage,
@@ -484,6 +487,7 @@ namespace GenTemplateBJ
                     continue;
                 i.Delete();
             }
+            releaseReport.SaveAs("D:\\PML\\GenTemplateBJ\\debug.xlsx");
             worksheet.Cell(3, 3).Value = excelData.OneToOneData["项目名称"]+excelData.OneToOneData["使用部分"];
             worksheet.Cell(5, 3).Value = excelData.OneToOneData["业主"];
             worksheet.Cell(7, 3).Value = excelData.OneToOneData["材料名称"];
@@ -495,11 +499,13 @@ namespace GenTemplateBJ
             worksheet.Cell(9, 7).Value = excelData.OneToOneData["使用部分"];
             worksheet.Cell(11, 7).Value = excelData.OneToOneData["放行联系人"];
             worksheet.Cell(12, 7).Value = excelData.OneToOneData["放行联系人电话"];
+            releaseReport.SaveAs("D:\\PML\\GenTemplateBJ\\debug.xlsx");
             var height = worksheet.Row(16).Height;
             var heights = worksheet.Rows(17, 33).Select(x => x.Height);
             worksheet.Row(16).Delete();
             worksheet.Row(15).InsertRowsBelow(excelData.OneToManyData["材料编码/设备位号"].Length);
             var end = 15 + excelData.OneToManyData["材料编码/设备位号"].Length+1;
+            releaseReport.SaveAs("D:\\PML\\GenTemplateBJ\\debug.xlsx");
             for (int i = 16; i < end; i++)
             {
                 worksheet.Row(i).Height = height;
@@ -513,6 +519,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "G").Value = excelData.OneToManyData["重量"][j];
                 worksheet.Cell(i, "H").Value = excelData.OneToManyData["备注-或物明细"][j];
             }
+            releaseReport.SaveAs("D:\\PML\\GenTemplateBJ\\debug.xlsx");
             var temp = new int[]{21,22,25,26,27 };
             foreach(var i in temp)
             {
@@ -521,6 +528,7 @@ namespace GenTemplateBJ
             }
             tickbox.Delete();
             Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 200, 115);
+            releaseReport.SaveAs("D:\\PML\\GenTemplateBJ\\debug.xlsx");
             return result;
         }
 
