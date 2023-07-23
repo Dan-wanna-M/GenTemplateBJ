@@ -38,7 +38,8 @@ namespace GenTemplateBJ
                     { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
                     {"放行报告.xlsx", FillReleaseReport("川西") },
-                    {"装箱单.xlsx", FillPackingList("川西") }
+                    {"装箱单.xlsx", FillPackingList("川西") }，
+                    {"装箱单2.xlsx", FillPackingList2("川西") }
                 };
                 OutputDocxs = new()
                 {
@@ -236,6 +237,7 @@ namespace GenTemplateBJ
         }
 
 
+// 
         private ExcelWrapper FillPackingList(string templateType)
         {
             var packingList = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
@@ -310,6 +312,82 @@ namespace GenTemplateBJ
                 flag2 += flag - 1;
             }
             return result;
+        }
+
+
+
+        private ExcelWrapper FillPackingList2(string templateType)
+        {
+            var packingList2 = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
+            var worksheet1 = packingList2.Worksheet(1);
+            
+            List<string> packNumList = new List<string>();
+            for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
+            {
+                packNumList.Add($"{excelData.OneToManyData["箱号"][i]}");
+            }
+            IEnumerable<string> distinctValues = packNumList.Distinct();
+            List<int> sortedList = packNumList
+                .Select(int.Parse)
+                .Distinct()
+                .OrderBy(n => n)
+                .ToList();
+            for (int i = 0; i < sortedList.Count; i++)
+            {
+                var worksheet = packingList2.Worksheets.Add($"Sheet{i}", worksheet1);
+                Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 230, 115);
+                worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + "  " + excelData.OneToOneData["使用部分"];
+                worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
+                worksheet.Cell(1, "AG").Value = $"装箱单号: {excelData.OneToOneData["请购单号"]}-{excelData.OneToOneData["批次"]}";
+                worksheet.Cell(4, "D").Value = excelData.OneToOneData["合同号"];
+                worksheet.Cell(5, "D").Value = excelData.OneToOneData["请购单号"];
+                worksheet.Cell(6, "D").Value = excelData.OneToOneData["发货日期"];
+                worksheet.Cell(7, "D").Value = excelData.OneToOneData["预计到达日期"];
+                worksheet.Cell(3, "W").Value = $"{excelData.OneToOneData["公司名称"]} {excelData.OneToOneData["发货人 电话"]}";
+                worksheet.Cell(4, "W").Value = excelData.OneToOneData["收货人 电话"];
+                worksheet.Cell(5, "W").Value = excelData.OneToOneData["承运商"];
+                worksheet.Cell(6, "W").Value = excelData.OneToOneData["运输方式"];
+                worksheet.Cell(7, "W").Value = excelData.OneToOneData["到货地点"];
+                worksheet.Cell(2, "AG").Value = $"共{packNum}箱   第{i + 1}箱";
+                for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
+                {
+                    workline = 10 + j;
+                    if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
+                    {
+                        worksheet.Cell(workline, "A").Value = j + 1;
+                        worksheet.Cell(workline, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
+                        worksheet.Cell(workline, "E").Value = excelData.OneToOneData["材料名称"];
+                        worksheet.Cell(workline, "K").Value = excelData.OneToManyData["产品规格(Size)"][j];
+                        worksheet.Cell(workline, "W").Value = excelData.OneToManyData["单位（Unit）"][j];
+                        worksheet.Cell(workline, "AA").Value = excelData.OneToManyData["数量（Quantity）"][j];
+                        worksheet.Cell(workline, "AP").Value = excelData.OneToManyData["箱号"][j];
+                        worksheet.Row(workline).InsertRowsBelow(1);
+                        worksheet.Range($"B{workline + 1}:D{workline + 1}").Merge();
+                        worksheet.Range($"E{workline + 1}:J{workline + 1}").Merge();
+                        worksheet.Range($"K{workline + 1}:R{workline + 1}").Merge();
+                        worksheet.Range($"S{workline + 1}:V{workline + 1}").Merge();
+                        worksheet.Range($"W{workline + 1}:Z{workline + 1}").Merge();
+                        worksheet.Range($"AA{workline + 1}:AC{workline + 1}").Merge();
+                        worksheet.Range($"AD{workline + 1}:AH{workline + 1}").Merge();
+                        worksheet.Range($"AP{workline + 1}:AQ{workline + 1}").Merge();
+
+                    }
+                }
+                worksheet.Row(10 + excelData.OneToManyData["材料编码/设备位号"].Length).Delete();
+
+            }
+            
+            var worksheetToDelete = packingList2.Worksheet(1);
+            worksheetToDelete.Delete();
+            var worksheets = new IXLWorksheet[packingList2.Worksheets.Count];
+            foreach (IXLWorksheet worksheet in packingList2.Worksheets)
+            {
+                worksheets[i] = worksheet;
+                i++;
+            }
+            var result = new ExcelWrapper(packingList2, worksheets);
+            return result;  
+
         }
 
         private ExcelWrapper FillQualityList(string templateType)
