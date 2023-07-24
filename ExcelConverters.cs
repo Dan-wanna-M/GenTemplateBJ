@@ -38,7 +38,7 @@ namespace GenTemplateBJ
                     { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
                     {"放行报告.xlsx", FillReleaseReport("川西") },
-                    {"装箱单.xlsx", FillPackingList("川西") }，
+                    {"装箱单.xlsx", FillPackingList("川西") },
                     {"装箱单2.xlsx", FillPackingList2("川西") }
                 };
                 OutputDocxs = new()
@@ -49,6 +49,8 @@ namespace GenTemplateBJ
                 AddCertificateSealToExcels();
             };
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
         public static XLWorkbook ConvertFactoryData(XLWorkbook dataExample, XLWorkbook mapping, XLWorkbook originalTest)
         {
             var worksheet1 = dataExample.Worksheet(1);
@@ -106,6 +108,8 @@ namespace GenTemplateBJ
                             worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                         first = i;
                     }
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
+                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
                 }
                 else
                 {
@@ -119,28 +123,28 @@ namespace GenTemplateBJ
                 }
 
             }
-            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 3, 8);
-            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4, 5);
-            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2, 5);
+            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 3, 6);
+            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4, 4);
+            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2, 6);
         }
 
         private void InitializeExcelsPrintSetting()
         {
-            GeneratePreprintExcels(OutputExcels["质检报告.xlsx"], 8, 8, 0.88, (worksheet, x, y) => 
+            GeneratePreprintExcels(OutputExcels["质检报告.xlsx"], 8, 8, 0.93, (worksheet, x, y) => 
             {
                 var startRow = worksheet.Row(x.begin);
                 var endRow = worksheet.Row(y.begin);
                 var end = startRow.LastCellUsed().Address.ColumnNumber;
                 startRow.Row(2, end).CopyTo(endRow.Cell(2));
             });
-            GeneratePreprintExcels(OutputExcels["发货清单.xlsx"], 9, 9, 0.81, (worksheet, x, y) =>
+            GeneratePreprintExcels(OutputExcels["发货清单.xlsx"], 9, 9, 0.84, (worksheet, x, y) =>
             {
                 var startRow = worksheet.Row(x.begin);
                 var endRow = worksheet.Row(y.begin);
                 var end = startRow.LastCellUsed().Address.ColumnNumber;
                 startRow.Row(1, end).CopyTo(endRow.Cell(1));
             });
-            GeneratePreprintExcels(OutputExcels["放行报告.xlsx"], 14, 15, 0.77, (worksheet, x, y) =>
+            GeneratePreprintExcels(OutputExcels["放行报告.xlsx"], 14, 15, 0.81, (worksheet, x, y) =>
             {
                 var startRow = worksheet.Row(x.begin);
                 var endRow = worksheet.Row(y.begin);
@@ -174,20 +178,23 @@ namespace GenTemplateBJ
                 };
             contentHeight /= percentage;
             var temp = contentHeight;
-            int count = headerRowEnd+excelData.OneToManyData["材料编码/设备位号"].Length;
+            int count = worksheet.LastRowUsed().RowNumber();
             var new_rows_count = headerRowEnd - headerRowStart + 1;
             for (int j = 1; j < count + 1; j++)
             {
                 temp -= worksheet.Row(j).Height;
-                if (temp - worksheet.Row(j + 1).Height < 0&&count!=j)
+                if (temp - worksheet.Row(j + 1).Height < 0)
                 {
-                    worksheet.Row(j).InsertRowsBelow(new_rows_count);
-                    worksheet.PageSetup.AddHorizontalPageBreak(j);
-                    applyHeader(worksheet, (headerRowStart, headerRowEnd), (j+1, j+new_rows_count));
-                    for (int i = j+1; i < j+1+new_rows_count; i++)
+                    if(j<headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length)
                     {
-                        worksheet.Row(i).Height = worksheet.Row(headerRowStart + i - j - 1).Height;
+                        worksheet.Row(j).InsertRowsBelow(new_rows_count);
+                        applyHeader(worksheet, (headerRowStart, headerRowEnd), (j + 1, j + new_rows_count));
+                        for (int i = j + 1; i < j + 1 + new_rows_count; i++)
+                        {
+                            worksheet.Row(i).Height = worksheet.Row(headerRowStart + i - j - 1).Height;
+                        }
                     }
+                    worksheet.PageSetup.AddHorizontalPageBreak(j);
                     count += new_rows_count;
                     temp = contentHeight;
                 }
@@ -205,7 +212,7 @@ namespace GenTemplateBJ
             worksheet.Cell(3, "C").Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(4, "C").Value = excelData.OneToOneData["合同号"];
             worksheet.Cell(5, "C").Value = excelData.OneToOneData["请购单号"];
-            worksheet.Cell(6, "C").Value = excelData.OneToOneData["发货日期"];
+            worksheet.Cell(6, "C").Value = excelData.OneToOneData["发货日期"].Split()[0];
             worksheet.Cell(7, "C").Value = excelData.OneToOneData["到货地点"];
             worksheet.Cell(3, "F").Value = excelData.OneToOneData["公司名称"];
             worksheet.Cell(4, "F").Value = excelData.OneToOneData["发货人 电话"];
@@ -221,6 +228,7 @@ namespace GenTemplateBJ
             for (int i = 10; i < end; i++)
             {
                 worksheet.Row(i).Height = height;
+                worksheet.Row(i).Cells().Style.Font.Bold = false;
                 worksheet.Cell(i, "A").Value = i - 9;
                 int j = i - 10;
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
@@ -332,9 +340,10 @@ namespace GenTemplateBJ
                 .Distinct()
                 .OrderBy(n => n)
                 .ToList();
+            var packNum = sortedList.Count;
             for (int i = 0; i < sortedList.Count; i++)
             {
-                var worksheet = packingList2.Worksheets.Add($"Sheet{i}", worksheet1);
+                var worksheet = worksheet1.CopyTo($"Sheet{i}");
                 Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 230, 115);
                 worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + "  " + excelData.OneToOneData["使用部分"];
                 worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
@@ -351,7 +360,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(2, "AG").Value = $"共{packNum}箱   第{i + 1}箱";
                 for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
                 {
-                    workline = 10 + j;
+                    var workline = 10 + j;
                     if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
                     {
                         worksheet.Cell(workline, "A").Value = j + 1;
@@ -380,10 +389,13 @@ namespace GenTemplateBJ
             var worksheetToDelete = packingList2.Worksheet(1);
             worksheetToDelete.Delete();
             var worksheets = new IXLWorksheet[packingList2.Worksheets.Count];
-            foreach (IXLWorksheet worksheet in packingList2.Worksheets)
             {
-                worksheets[i] = worksheet;
-                i++;
+                var i = 0;
+                foreach (IXLWorksheet worksheet in packingList2.Worksheets)
+                {
+                    worksheets[i] = worksheet;
+                    i++;
+                }
             }
             var result = new ExcelWrapper(packingList2, worksheets);
             return result;  
@@ -476,7 +488,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "L").Value = $"TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
                 worksheet.Cell(i, "M").Value = excelData.OneToOneData["依据标准"];
                 worksheet.Cell(i, "N").Value = excelData.OneToManyData["单位"][j];
-                worksheet.Cell(i, "O").Value = excelData.OneToManyData["数量"][j];
+                worksheet.Cell(i, "O").Value = excelData.OneToManyData["数量（Quantity）"][j];
                 worksheet.Cell(i, "T").Value = excelData.OneToOneData["批次"];
                 worksheet.Cell(i, "AB").Value = "产品质量证明文件";
             }
@@ -504,9 +516,8 @@ namespace GenTemplateBJ
             int currentTop = 1;
             int initialTop = currentTop;
             var logo = worksheet.Pictures.Single();
-
             Utils.AdjustWidth(worksheet, currentLeft, currentLeft+certificateWidth+marginW, certificateWidth);
-            void AddOneCertificate(XLCellValue productSize, XLCellValue materialCode, XLCellValue quantity)
+            void AddOneCertificate(int i, XLCellValue productSize, XLCellValue materialCode, XLCellValue quantity)
             {
                 int horizontalShift = certificateWidth + marginW;
                 int verticalShift = certicateHeight + marginH;
@@ -534,6 +545,8 @@ namespace GenTemplateBJ
                         layoutState = CertificateRowStatus.LeftFull;
                         break;
                 }
+                if (i % 6 == 0)
+                    worksheet.PageSetup.AddHorizontalPageBreak(currentTop-1);
                 int firstCellVerticalOffset = 8 - initialTop;
                 int firstCellHorizontalOffset = worksheet.ColumnLetterToNumber("H") - initialLeft;
                 logo.Duplicate().MoveTo(worksheet.Cell(currentTop + 1, currentLeft + worksheet.ColumnLetterToNumber("J") - initialLeft));
@@ -546,7 +559,7 @@ namespace GenTemplateBJ
             }
             for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
             {
-                AddOneCertificate(excelData.OneToManyData["产品规格(Size)"][i], excelData.OneToManyData["材料编码/设备位号"][i], excelData.OneToManyData["数量（Quantity）"][i]);
+                AddOneCertificate(i, excelData.OneToManyData["产品规格(Size)"][i], excelData.OneToManyData["材料编码/设备位号"][i], excelData.OneToManyData["数量（Quantity）"][i]);
             }
             return result;
         }
@@ -663,8 +676,6 @@ namespace GenTemplateBJ
                 OnPropertyChanged(nameof(IsOutputsNotNull));
             }
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
 
         public bool IsExcelDataNotNull { get => ExcelData != null; }
 
