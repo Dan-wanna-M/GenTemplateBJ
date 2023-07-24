@@ -38,7 +38,7 @@ namespace GenTemplateBJ
                     { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
                     {"放行报告.xlsx", FillReleaseReport("川西") },
-                    {"装箱单.xlsx", FillPackingList("川西") }，
+                    {"装箱单.xlsx", FillPackingList("川西") },
                     {"装箱单2.xlsx", FillPackingList2("川西") }
                 };
                 OutputDocxs = new()
@@ -49,6 +49,8 @@ namespace GenTemplateBJ
                 AddCertificateSealToExcels();
             };
         }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
         public static XLWorkbook ConvertFactoryData(XLWorkbook dataExample, XLWorkbook mapping, XLWorkbook originalTest)
         {
             var worksheet1 = dataExample.Worksheet(1);
@@ -332,9 +334,10 @@ namespace GenTemplateBJ
                 .Distinct()
                 .OrderBy(n => n)
                 .ToList();
+            var packNum = sortedList.Count;
             for (int i = 0; i < sortedList.Count; i++)
             {
-                var worksheet = packingList2.Worksheets.Add($"Sheet{i}", worksheet1);
+                var worksheet = worksheet1.CopyTo($"Sheet{i}");
                 Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 230, 115);
                 worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + "  " + excelData.OneToOneData["使用部分"];
                 worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
@@ -351,7 +354,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(2, "AG").Value = $"共{packNum}箱   第{i + 1}箱";
                 for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
                 {
-                    workline = 10 + j;
+                    var workline = 10 + j;
                     if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
                     {
                         worksheet.Cell(workline, "A").Value = j + 1;
@@ -380,10 +383,13 @@ namespace GenTemplateBJ
             var worksheetToDelete = packingList2.Worksheet(1);
             worksheetToDelete.Delete();
             var worksheets = new IXLWorksheet[packingList2.Worksheets.Count];
-            foreach (IXLWorksheet worksheet in packingList2.Worksheets)
             {
-                worksheets[i] = worksheet;
-                i++;
+                var i = 0;
+                foreach (IXLWorksheet worksheet in packingList2.Worksheets)
+                {
+                    worksheets[i] = worksheet;
+                    i++;
+                }
             }
             var result = new ExcelWrapper(packingList2, worksheets);
             return result;  
@@ -476,7 +482,7 @@ namespace GenTemplateBJ
                 worksheet.Cell(i, "L").Value = $"TJMZLBG-yyyymm-{excelData.OneToOneData["质检报告编号"]}";
                 worksheet.Cell(i, "M").Value = excelData.OneToOneData["依据标准"];
                 worksheet.Cell(i, "N").Value = excelData.OneToManyData["单位"][j];
-                worksheet.Cell(i, "O").Value = excelData.OneToManyData["数量"][j];
+                worksheet.Cell(i, "O").Value = excelData.OneToManyData["数量（Quantity）"][j];
                 worksheet.Cell(i, "T").Value = excelData.OneToOneData["批次"];
                 worksheet.Cell(i, "AB").Value = "产品质量证明文件";
             }
@@ -663,8 +669,6 @@ namespace GenTemplateBJ
                 OnPropertyChanged(nameof(IsOutputsNotNull));
             }
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
 
         public bool IsExcelDataNotNull { get => ExcelData != null; }
 
