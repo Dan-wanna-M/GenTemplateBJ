@@ -384,7 +384,7 @@ namespace GenTemplateBJ
 
                     }
                 }
-                worksheet.Row(10 + excelData.OneToManyData["材料编码/设备位号"].Length).Delete();
+                worksheet.Row(10 + flag).Delete();
 
             }
             
