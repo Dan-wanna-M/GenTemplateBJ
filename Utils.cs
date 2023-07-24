@@ -127,7 +127,7 @@ namespace GenTemplateBJ
         {
             var random = new Random();
             float rotationAngle = (float)(random.NextDouble() * 20 - 10);
-            image.Mutate(c => c.Resize(Math.Max(image.Height, image.Width)/2, Math.Max(image.Height, image.Width)/2, KnownResamplers.Lanczos3).Rotate(rotationAngle));
+            image.Mutate(c => c.Resize(Math.Max(image.Height, image.Width)/2, Math.Max(image.Height, image.Width)/2, KnownResamplers.Lanczos3));
             using MemoryStream ms = new();
             var encoder = new SixLabors.ImageSharp.Formats.Png.PngEncoder();
             image.Save(ms, encoder);

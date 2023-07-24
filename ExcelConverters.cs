@@ -130,21 +130,21 @@ namespace GenTemplateBJ
 
         private void InitializeExcelsPrintSetting()
         {
-            GeneratePreprintExcels(OutputExcels["质检报告.xlsx"], 8, 8, 0.88, (worksheet, x, y) => 
+            GeneratePreprintExcels(OutputExcels["质检报告.xlsx"], 8, 8, 0.93, (worksheet, x, y) => 
             {
                 var startRow = worksheet.Row(x.begin);
                 var endRow = worksheet.Row(y.begin);
                 var end = startRow.LastCellUsed().Address.ColumnNumber;
                 startRow.Row(2, end).CopyTo(endRow.Cell(2));
             });
-            GeneratePreprintExcels(OutputExcels["发货清单.xlsx"], 9, 9, 0.81, (worksheet, x, y) =>
+            GeneratePreprintExcels(OutputExcels["发货清单.xlsx"], 9, 9, 0.84, (worksheet, x, y) =>
             {
                 var startRow = worksheet.Row(x.begin);
                 var endRow = worksheet.Row(y.begin);
                 var end = startRow.LastCellUsed().Address.ColumnNumber;
                 startRow.Row(1, end).CopyTo(endRow.Cell(1));
             });
-            GeneratePreprintExcels(OutputExcels["放行报告.xlsx"], 14, 15, 0.77, (worksheet, x, y) =>
+            GeneratePreprintExcels(OutputExcels["放行报告.xlsx"], 14, 15, 0.81, (worksheet, x, y) =>
             {
                 var startRow = worksheet.Row(x.begin);
                 var endRow = worksheet.Row(y.begin);
@@ -212,7 +212,7 @@ namespace GenTemplateBJ
             worksheet.Cell(3, "C").Value = excelData.OneToOneData["材料名称"];
             worksheet.Cell(4, "C").Value = excelData.OneToOneData["合同号"];
             worksheet.Cell(5, "C").Value = excelData.OneToOneData["请购单号"];
-            worksheet.Cell(6, "C").Value = excelData.OneToOneData["发货日期"];
+            worksheet.Cell(6, "C").Value = excelData.OneToOneData["发货日期"].Split()[0];
             worksheet.Cell(7, "C").Value = excelData.OneToOneData["到货地点"];
             worksheet.Cell(3, "F").Value = excelData.OneToOneData["公司名称"];
             worksheet.Cell(4, "F").Value = excelData.OneToOneData["发货人 电话"];
