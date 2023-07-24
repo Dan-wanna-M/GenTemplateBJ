@@ -358,12 +358,13 @@ namespace GenTemplateBJ
                 worksheet.Cell(6, "W").Value = excelData.OneToOneData["运输方式"];
                 worksheet.Cell(7, "W").Value = excelData.OneToOneData["到货地点"];
                 worksheet.Cell(2, "AG").Value = $"共{packNum}箱   第{i + 1}箱";
+                int flag = 0;
                 for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
                 {
-                    var workline = 10 + j;
+                    var workline = 10 + flag;
                     if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
                     {
-                        worksheet.Cell(workline, "A").Value = j + 1;
+                        worksheet.Cell(workline, "A").Value = flag + 1;
                         worksheet.Cell(workline, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
                         worksheet.Cell(workline, "E").Value = excelData.OneToOneData["材料名称"];
                         worksheet.Cell(workline, "K").Value = excelData.OneToManyData["产品规格(Size)"][j];
@@ -379,6 +380,7 @@ namespace GenTemplateBJ
                         worksheet.Range($"AA{workline + 1}:AC{workline + 1}").Merge();
                         worksheet.Range($"AD{workline + 1}:AH{workline + 1}").Merge();
                         worksheet.Range($"AP{workline + 1}:AQ{workline + 1}").Merge();
+                        flag++; 
 
                     }
                 }
