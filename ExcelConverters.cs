@@ -228,7 +228,7 @@ namespace GenTemplateBJ
             for (int i = 10; i < end; i++)
             {
                 worksheet.Row(i).Height = height;
-                worksheet.Row(i).CellsUsed().Style.Font.Bold = false;
+                worksheet.Row(i).Cells().Style.Font.Bold = false;
                 worksheet.Cell(i, "A").Value = i - 9;
                 int j = i - 10;
                 worksheet.Cell(i, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
