@@ -38,8 +38,7 @@ namespace GenTemplateBJ
                     { "各厂家自查表.xlsx", FillSelfCheckTable("川西") },
                     {"产品合格证.xlsx",FillProductionCertificate("川西") },
                     {"放行报告.xlsx", FillReleaseReport("川西") },
-                    {"装箱单.xlsx", FillPackingList("川西") },
-                    {"装箱单2.xlsx", FillPackingList2("川西") }
+                    {"装箱单.xlsx", FillPackingList("川西") }
                 };
                 OutputDocxs = new()
                 {
@@ -92,40 +91,54 @@ namespace GenTemplateBJ
         private void AddCertificateSealToExcels()
         {
 
-            void AddSeal(IXLWorksheet worksheet, int lastDataRow, int headerRowEnd, int horizontalOffsetFromRight, int verticalOffsetFromBottom)
+            void AddSeal(IXLWorksheet worksheet, int lastDataRow, int headerRowEnd, int horizontalOffsetFromRight)
             {
                 var first = 1;
-                var halfwidth = worksheet.ColumnsUsed().Select(x=>x.Width).Sum()/2;
-                worksheet.PageSetup.RowBreaks.Sort();
+                var columnNumber = worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight;
+                int GetRowNumber(IXLRows rows)
+                {
+                    var picHeight = 280.0 * 390 / 516;
+                    var rowNumber = rows.Reverse().FirstOrDefault((x) =>
+                    {
+                        picHeight -= x.Height;
+                        return picHeight < 0;
+                    })?.RowNumber() ?? rows.Last().RowNumber();
+                    return rowNumber;
+                }
+
                 if(worksheet.PageSetup.RowBreaks.Count > 0) 
                 {
-                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.PageSetup.RowBreaks[0]-verticalOffsetFromBottom,
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(GetRowNumber(worksheet.Rows(1, worksheet.PageSetup.RowBreaks[0])),
+                        columnNumber), 280);
                     first = worksheet.PageSetup.RowBreaks[0];
                     foreach (var i in worksheet.PageSetup.RowBreaks.Skip(1))
                     {
-                        Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(i-verticalOffsetFromBottom,
-                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                        Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(GetRowNumber(worksheet.Rows(first, i)),
+                            columnNumber), 280);
                         first = i;
                     }
-                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom,
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(GetRowNumber(worksheet.Rows(first+1, worksheet.LastRowUsed().RowNumber())),
+                        columnNumber), 280);
                 }
                 else
                 {
-                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber() - verticalOffsetFromBottom, 
-                        worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                    Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(GetRowNumber(worksheet.Rows(first+1, worksheet.LastRowUsed().RowNumber())), 
+                        columnNumber), 280);
                     if (headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length > lastDataRow)
                     {
                         Utils.AddPictureToExcel(worksheet, Seal.Clone(), worksheet.Cell(worksheet.LastRowUsed().RowNumber(),
-                            worksheet.LastColumnUsed().ColumnNumber() - horizontalOffsetFromRight), 280);
+                            columnNumber), 280);
                     }
                 }
 
             }
-            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 3, 6);
-            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4, 4);
-            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2, 6);
+            AddSeal(OutputExcels["质检报告.xlsx"].ActiveWorkSheets.Single(),32, 8, 3);
+            AddSeal(OutputExcels["发货清单.xlsx"].ActiveWorkSheets.Single(), 28, 9, 4);
+            AddSeal(OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single(), 24, 15, 2);
+            foreach(var worksheet in OutputExcels["装箱单.xlsx"].ActiveWorkSheets)
+            {
+                AddSeal(worksheet, 23, 9, 15);
+            }
         }
 
         private void InitializeExcelsPrintSetting()
@@ -162,41 +175,60 @@ namespace GenTemplateBJ
                 }
             });
             OutputExcels["放行报告.xlsx"].ActiveWorkSheets.Single().Range("BE:BP").Delete(XLShiftDeletedCells.ShiftCellsLeft); // 由于某些未知原因，去掉之后结果会很诡异。
+            GeneratePreprintExcels(OutputExcels["装箱单.xlsx"], 9, 9, 0.98, (worksheet, x, y) =>
+            {
+                var startRow = worksheet.Row(x.begin);
+                var endRow = worksheet.Row(y.begin);
+                var end = startRow.LastCellUsed().Address.ColumnNumber;
+                startRow.Row(1, end).CopyTo(endRow.Cell(1));
+                var workline = endRow.RowNumber();
+                worksheet.Range($"B{workline + 1}:D{workline + 1}").Merge();
+                worksheet.Range($"E{workline + 1}:J{workline + 1}").Merge();
+                worksheet.Range($"K{workline + 1}:R{workline + 1}").Merge();
+                worksheet.Range($"S{workline + 1}:V{workline + 1}").Merge();
+                worksheet.Range($"W{workline + 1}:Z{workline + 1}").Merge();
+                worksheet.Range($"AA{workline + 1}:AC{workline + 1}").Merge();
+                worksheet.Range($"AD{workline + 1}:AH{workline + 1}").Merge();
+                worksheet.Range($"AP{workline + 1}:AQ{workline + 1}").Merge();
+            });
         }
 
         private void GeneratePreprintExcels(ExcelWrapper wrapper, int headerRowStart, int headerRowEnd, double percentage,
             Action<IXLWorksheet,(int begin, int end), (int begin, int end)> applyHeader)
         {
-            var worksheet = wrapper.ActiveWorkSheets.Single();
-            var margins = OutputDocxs["封面.docx"].Document.body.sectPr.pgMar;
-            (double w, double h) = (11906, 16838);
-            var contentHeight = worksheet.PageSetup.PageOrientation switch  
+            foreach (var worksheet in wrapper.ActiveWorkSheets)
+            {
+                worksheet.PageSetup.PagesWide = 1;
+                var margins = OutputDocxs["封面.docx"].Document.body.sectPr.pgMar;
+                (double w, double h) = (11906, 16838);
+                var contentHeight = worksheet.PageSetup.PageOrientation switch
                 {
                     XLPageOrientation.Portrait => (h - margins.top - margins.bottom) / 20,
-                    XLPageOrientation.Landscape=> (w - margins.top - margins.bottom) / 20,
+                    XLPageOrientation.Landscape => (w - margins.top - margins.bottom) / 20,
                     _ => (h - margins.top - margins.bottom) / 20
                 };
-            contentHeight /= percentage;
-            var temp = contentHeight;
-            int count = worksheet.LastRowUsed().RowNumber();
-            var new_rows_count = headerRowEnd - headerRowStart + 1;
-            for (int j = 1; j < count + 1; j++)
-            {
-                temp -= worksheet.Row(j).Height;
-                if (temp - worksheet.Row(j + 1).Height < 0)
+                contentHeight /= percentage;
+                var temp = contentHeight;
+                int count = worksheet.LastRowUsed().RowNumber();
+                var new_rows_count = headerRowEnd - headerRowStart + 1;
+                for (int j = 1; j < count + 1; j++)
                 {
-                    if(j<headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length)
+                    temp -= worksheet.Row(j).Height;
+                    if (temp - worksheet.Row(j + 1).Height < 0)
                     {
-                        worksheet.Row(j).InsertRowsBelow(new_rows_count);
-                        applyHeader(worksheet, (headerRowStart, headerRowEnd), (j + 1, j + new_rows_count));
-                        for (int i = j + 1; i < j + 1 + new_rows_count; i++)
+                        if (j < headerRowEnd + excelData.OneToManyData["材料编码/设备位号"].Length)
                         {
-                            worksheet.Row(i).Height = worksheet.Row(headerRowStart + i - j - 1).Height;
+                            worksheet.Row(j).InsertRowsBelow(new_rows_count);
+                            applyHeader(worksheet, (headerRowStart, headerRowEnd), (j + 1, j + new_rows_count));
+                            for (int i = j + 1; i < j + 1 + new_rows_count; i++)
+                            {
+                                worksheet.Row(i).Height = worksheet.Row(headerRowStart + i - j - 1).Height;
+                            }
                         }
+                        worksheet.PageSetup.AddHorizontalPageBreak(j);
+                        count += new_rows_count;
+                        temp = contentHeight;
                     }
-                    worksheet.PageSetup.AddHorizontalPageBreak(j);
-                    count += new_rows_count;
-                    temp = contentHeight;
                 }
             }
         }
@@ -244,87 +276,7 @@ namespace GenTemplateBJ
             return result;
         }
 
-
-// 
         private ExcelWrapper FillPackingList(string templateType)
-        {
-            var packingList = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
-            var worksheet = packingList.Worksheet(1);
-            var result = new ExcelWrapper(packingList, packingList.Worksheet(1));
-            Utils.AddPictureToExcel(worksheet, Logo.Clone(), worksheet.Cell("A1"), 230, 115);
-            worksheet.Cell(1, "I").Value = excelData.OneToOneData["项目名称"] + "  " + excelData.OneToOneData["使用部分"];
-            worksheet.Cell(3, "D").Value = excelData.OneToOneData["材料名称"];
-            worksheet.Cell(1, "AG").Value = $"装箱单号: {excelData.OneToOneData["请购单号"]}-{excelData.OneToOneData["批次"]}";
-            worksheet.Cell(4, "D").Value = excelData.OneToOneData["合同号"];
-            worksheet.Cell(5, "D").Value = excelData.OneToOneData["请购单号"];
-            worksheet.Cell(6, "D").Value = excelData.OneToOneData["发货日期"];
-            worksheet.Cell(7, "D").Value = excelData.OneToOneData["预计到达日期"];
-            worksheet.Cell(3, "W").Value = $"{excelData.OneToOneData["公司名称"]} {excelData.OneToOneData["发货人 电话"]}";
-            worksheet.Cell(4, "W").Value = excelData.OneToOneData["收货人 电话"];
-            worksheet.Cell(5, "W").Value = excelData.OneToOneData["承运商"];
-            worksheet.Cell(6, "W").Value = excelData.OneToOneData["运输方式"];
-            worksheet.Cell(7, "W").Value = excelData.OneToOneData["到货地点"];
-
-
-            List<string> packNumList = new List<string>();
-            for (int i = 0; i < excelData.OneToManyData["材料编码/设备位号"].Length; i++)
-            {
-                packNumList.Add($"{excelData.OneToManyData["箱号"][i]}");
-            }
-            IEnumerable<string> distinctValues = packNumList.Distinct();
-            int packNum = distinctValues.Count();
-            for (int i = 1; i < packNum; i++)
-            {
-                worksheet.Range("A1", "AQ11").CopyTo(worksheet.Cell($"A{1 + 12 * i}"));
-                Utils.AdjustHeight(worksheet, 1, 1 + 12 * i, 11);
-            }
-            List<int> sortedList = packNumList
-                .Select(int.Parse)
-                .Distinct()
-                .OrderBy(n => n)
-                .ToList();
-            int flag2 = 0;
-            for (int i = 0; i < sortedList.Count(); i++)
-            {
-                int flag = 0;
-                worksheet.Cell(2 + 12 * i + flag2, "AG").Value = $"共{packNum}箱   第{i + 1}箱";
-                for (int j = 0; j < excelData.OneToManyData["材料编码/设备位号"].Length; j++)
-                {
-                    if (sortedList[i].ToString() == excelData.OneToManyData["箱号"][j].ToString())
-                    {
-                        int workline = 10 + 12 * i + flag + flag2;
-                        worksheet.Cell(workline, "A").Value = flag + 1;
-                        worksheet.Cell(workline, "B").Value = excelData.OneToManyData["材料编码/设备位号"][j];
-                        worksheet.Cell(workline, "E").Value = excelData.OneToOneData["材料名称"];
-                        worksheet.Cell(workline, "K").Value = excelData.OneToManyData["产品规格(Size)"][j];
-                        worksheet.Cell(workline, "W").Value = excelData.OneToManyData["单位（Unit）"][j];
-                        worksheet.Cell(workline, "AA").Value = excelData.OneToManyData["数量（Quantity）"][j];
-
-
-                        worksheet.Cell(workline, "AP").Value = excelData.OneToManyData["箱号"][j];
-                        worksheet.Row(workline).InsertRowsBelow(1);
-                        worksheet.Range($"B{workline + 1}:D{workline + 1}").Merge();
-                        worksheet.Range($"E{workline + 1}:J{workline + 1}").Merge();
-                        worksheet.Range($"K{workline + 1}:R{workline + 1}").Merge();
-                        worksheet.Range($"S{workline + 1}:V{workline + 1}").Merge();
-                        worksheet.Range($"W{workline + 1}:Z{workline + 1}").Merge();
-                        worksheet.Range($"AA{workline + 1}:AC{workline + 1}").Merge();
-                        worksheet.Range($"AD{workline + 1}:AH{workline + 1}").Merge();
-                        worksheet.Range($"AP{workline + 1}:AQ{workline + 1}").Merge();
-                        flag++; 
-                    }
-
-
-                }
-                worksheet.Row(10 + 12 * i + flag + flag2).Delete();
-                flag2 += flag - 1;
-            }
-            return result;
-        }
-
-
-
-        private ExcelWrapper FillPackingList2(string templateType)
         {
             var packingList2 = Utils.GetTemplateExcel(templateType, "8装箱单模版.xlsx");
             var worksheet1 = packingList2.Worksheet(1);
@@ -372,6 +324,7 @@ namespace GenTemplateBJ
                         worksheet.Cell(workline, "AA").Value = excelData.OneToManyData["数量（Quantity）"][j];
                         worksheet.Cell(workline, "AP").Value = excelData.OneToManyData["箱号"][j];
                         worksheet.Row(workline).InsertRowsBelow(1);
+                        worksheet.Row(workline + 1).Height = worksheet.Row(workline).Height;
                         worksheet.Range($"B{workline + 1}:D{workline + 1}").Merge();
                         worksheet.Range($"E{workline + 1}:J{workline + 1}").Merge();
                         worksheet.Range($"K{workline + 1}:R{workline + 1}").Merge();

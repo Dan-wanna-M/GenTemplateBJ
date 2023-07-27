@@ -135,6 +135,7 @@ namespace GenTemplateBJ
             picture.MoveTo(cell);
             picture.WithSize(sealWidth, sealWidth * 390/516);
         }
+
         public static void AddPictureToExcel(IXLWorksheet worksheet, Image<Rgba32> image, IXLCell cell, int pictureWidth, int pictureHeight)
         {
             using MemoryStream ms = new();
